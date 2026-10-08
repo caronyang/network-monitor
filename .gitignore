@@ -1,0 +1,26 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+artifacts/
+
+# Visual Studio / IDE
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+
+# Logs & local test artifacts
+*.log
+crash.log
+
+# OS junk
+Thumbs.db
+Desktop.ini

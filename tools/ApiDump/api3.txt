@@ -1,0 +1,157 @@
+﻿===== Add.Bar / Add.Bars param names =====
+Bar(Bar bar)
+Bar(Double position, Double value, Double error)
+Bars(Bar[] bars)
+Bars(Double[] values)
+Bars(IEnumerable`1 positions, IEnumerable`1 values)
+Bars(List`1 bars)
+
+===== Bar properties =====
+AxisLimits AxisLimits
+Boolean CenterLabel
+Boolean ErrorNegative
+Boolean ErrorPositive
+Boolean IsVisible
+Boolean LabelOnTop
+Color BorderColor
+Color FillColor
+Color FillHatchColor
+Color LineColor
+CoordinateRect Rect
+Double Error
+Double ErrorSize
+Double Position
+Double Size
+Double Value
+Double ValueBase
+FillStyle FillStyle
+IEnumerable`1 ErrorLines
+IHatch FillHatch
+LinePattern LinePattern
+LineStyle LineStyle
+Orientation Orientation
+Single BorderLineWidth
+Single ErrorLineWidth
+Single LabelOffset
+Single LineWidth
+String Label
+String ValueLabel
+
+===== BarPlot properties =====
+Boolean Horizontal
+Boolean IsVisible
+Boolean LabelsOnTop
+Color Color
+IAxes Axes
+IEnumerable`1 LegendItems
+LabelStyle ValueLabelStyle
+List`1 Bars
+String Label
+String LegendText
+String ValueLabel
+
+===== MarkerShape values =====
+Asterisk
+CircleWithLineLeft
+CircleWithLineRight
+Cross
+Eks
+FilledCircle
+FilledDiamond
+FilledSquare
+FilledTriangleDown
+FilledTriangleUp
+HashTag
+HorizontalBar
+None
+OpenCircle
+OpenCircleWithCross
+OpenCircleWithDot
+OpenCircleWithEks
+OpenDiamond
+OpenSquare
+OpenTriangleDown
+OpenTriangleUp
+TriangleWithLineLeft
+TriangleWithLineRight
+TriDown
+TriUp
+VerticalBar
+
+===== LinePattern static members =====
+Method get_Dashed
+Method get_DenselyDashed
+Method get_Dotted
+Method get_Solid
+Method GetAllPatterns
+Property Dashed
+Property DenselyDashed
+Property Dotted
+Property Solid
+
+===== Colors containing Dodger/Orange/Cornflower/Steel/Teal/Green/Red/Gray =====
+CornflowerBlue
+Crimson
+DarkGray
+DarkGrey
+DarkOrange
+DarkSlateGray
+DarkSlateGrey
+DeepPink
+DeepSkyBlue
+DimGray
+DimGrey
+DodgerBlue
+ForestGreen
+Gray
+Grey
+LightGray
+LightGrey
+LightSlateGray
+LightSlateGrey
+LightSteelBlue
+MediumAquaMarine
+MediumBlue
+MediumOrchid
+MediumPurple
+MediumSeaGreen
+MediumSlateBlue
+MediumSpringGreen
+MediumTurquoise
+MediumVioletRed
+Orange
+OrangeRed
+RoyalBlue
+SlateGray
+SlateGrey
+SteelBlue
+Teal
+
+===== IXAxis members =====
+
+===== IYAxis members =====
+
+===== TitlePanel props =====
+Boolean FullFigureCenter
+Boolean IsVisible
+Boolean ShowDebugInformation
+Edge Edge
+LabelStyle Label
+Single MaximumSize
+Single MinimumSize
+
+===== AxisTitle helpers on Plot.Axes =====
+ScottPlot.Panels.TitlePanel get_Title()
+ScottPlot.Plottables.TickModifierLabel SetupMultiplierNotation(ScottPlot.IAxis)
+
+===== Alignment values =====
+LowerCenter
+LowerLeft
+LowerRight
+MiddleCenter
+MiddleLeft
+MiddleRight
+UpperCenter
+UpperLeft
+UpperRight
+

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041</TargetFramework>
+    <!-- Windows desktop only; supported architectures: x64 (recommended) and x86 -->
+    <RuntimeIdentifiers>win-x64;win-x86</RuntimeIdentifiers>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>NetworkMonitor</AssemblyName>
+    <RootNamespace>NetworkMonitor</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>Network Monitor</Product>
+    <Description>Lightweight real-time network traffic monitor for Windows</Description>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
+    <ApplicationIcon>assets\app.ico</ApplicationIcon>
+    <TieredPgo>true</TieredPgo>
+    <DebugType>portable</DebugType>
+    <!-- WFO1000: "do not set properties in the constructor" - harmless for our sealed custom controls -->
+    <NoWarn>$(NoWarn);WFO1000</NoWarn>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.12" />
+    <PackageReference Include="ScottPlot.WinForms" Version="5.1.59" />
+  </ItemGroup>
+
+</Project>

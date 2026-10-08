@@ -1,0 +1,90 @@
+﻿===== Add.Bar / Add.Bars param names =====
+Bar(Bar bar)
+Bar(Double position, Double value, Double error)
+Bars(Bar[] bars)
+Bars(Double[] values)
+Bars(IEnumerable`1 positions, IEnumerable`1 values)
+Bars(List`1 bars)
+
+===== Bar properties =====
+AxisLimits AxisLimits
+Boolean CenterLabel
+Boolean ErrorNegative
+Boolean ErrorPositive
+Boolean IsVisible
+Boolean LabelOnTop
+Color BorderColor
+Color FillColor
+Color FillHatchColor
+Color LineColor
+CoordinateRect Rect
+Double Error
+Double ErrorSize
+Double Position
+Double Size
+Double Value
+Double ValueBase
+FillStyle FillStyle
+IEnumerable`1 ErrorLines
+IHatch FillHatch
+LinePattern LinePattern
+LineStyle LineStyle
+Orientation Orientation
+Single BorderLineWidth
+Single ErrorLineWidth
+Single LabelOffset
+Single LineWidth
+String Label
+String ValueLabel
+
+===== BarPlot properties =====
+Boolean Horizontal
+Boolean IsVisible
+Boolean LabelsOnTop
+Color Color
+IAxes Axes
+IEnumerable`1 LegendItems
+LabelStyle ValueLabelStyle
+List`1 Bars
+String Label
+String LegendText
+String ValueLabel
+
+===== MarkerShape values =====
+Asterisk
+CircleWithLineLeft
+CircleWithLineRight
+Cross
+Eks
+FilledCircle
+FilledDiamond
+FilledSquare
+FilledTriangleDown
+FilledTriangleUp
+HashTag
+HorizontalBar
+None
+OpenCircle
+OpenCircleWithCross
+OpenCircleWithDot
+OpenCircleWithEks
+OpenDiamond
+OpenSquare
+OpenTriangleDown
+OpenTriangleUp
+TriangleWithLineLeft
+TriangleWithLineRight
+TriDown
+TriUp
+VerticalBar
+
+dotnet : Unhandled exception. System.ArgumentException: Type provided must be an Enum. (Parameter 'enumType')
+位於 線路:1 字元:1
++ dotnet run --project 'D:\99_Temp\opencode\networkmonitor\tools\ApiDum ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Unhandled excep...ter 'enumType'):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   at System.RuntimeType.ThrowMustBeEnum()
+   at System.RuntimeType.GetEnumNames()
+   at Program.<Main>$(String[] args) in D:\99_Temp\opencode\networkmonitor\tools\ApiDump\Program.cs:line 21

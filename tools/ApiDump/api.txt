@@ -1,0 +1,775 @@
+﻿===== Plot.Add methods (PlottableAdder) =====
+Boolean Equals(System.Object)
+Int32 GetHashCode()
+ScottPlot.Color GetNextColor(Boolean)
+ScottPlot.IPlottable Plottable(ScottPlot.IPlottable)
+ScottPlot.Legend Legend()
+ScottPlot.Panels.ColorBar ColorBar(ScottPlot.IHasColorAxis, ScottPlot.Edge)
+ScottPlot.Plottables.Annotation Annotation(System.String, ScottPlot.Alignment)
+ScottPlot.Plottables.Annotation BackgroundText(System.String, System.Nullable`1[ScottPlot.Color], Double)
+ScottPlot.Plottables.Arrow Arrow(Double, Double, Double, Double)
+ScottPlot.Plottables.Arrow Arrow(ScottPlot.CoordinateLine)
+ScottPlot.Plottables.Arrow Arrow(ScottPlot.Coordinates, ScottPlot.Coordinates)
+ScottPlot.Plottables.BarPlot Bar(Double, Double, Double)
+ScottPlot.Plottables.BarPlot Bar(ScottPlot.Bar)
+ScottPlot.Plottables.BarPlot Bars(Double[])
+ScottPlot.Plottables.BarPlot Bars(ScottPlot.Bar[])
+ScottPlot.Plottables.BarPlot Bars(System.Collections.Generic.IEnumerable`1[System.Double], System.Collections.Generic.IEnumerable`1[System.Double])
+ScottPlot.Plottables.BarPlot Bars(System.Collections.Generic.List`1[ScottPlot.Bar])
+ScottPlot.Plottables.BarPlot Bars[T](System.Collections.Generic.IEnumerable`1[System.Double], System.Collections.Generic.IEnumerable`1[T])
+ScottPlot.Plottables.BarPlot Ranges(System.Collections.Generic.List`1[System.ValueTuple`2[System.String,ScottPlot.CoordinateRange]], System.Nullable`1[ScottPlot.Color], Boolean)
+ScottPlot.Plottables.BarPlot[] StackedRanges(System.Collections.Generic.List`1[System.ValueTuple`2[System.String,System.Double[]]], ScottPlot.IPalette, Boolean)
+ScottPlot.Plottables.BoxPlot Box(ScottPlot.Box)
+ScottPlot.Plottables.BoxPlot Boxes(System.Collections.Generic.IEnumerable`1[ScottPlot.Box])
+ScottPlot.Plottables.Bracket Bracket(Double, Double, Double, Double, System.String)
+ScottPlot.Plottables.Bracket Bracket(ScottPlot.CoordinateLine, System.String)
+ScottPlot.Plottables.Bracket Bracket(ScottPlot.Coordinates, ScottPlot.Coordinates, System.String)
+ScottPlot.Plottables.Callout Callout(System.String, Double, Double, Double, Double)
+ScottPlot.Plottables.Callout Callout(System.String, ScottPlot.Coordinates, ScottPlot.Coordinates)
+ScottPlot.Plottables.CandlestickPlot Candlestick(ScottPlot.OHLC[])
+ScottPlot.Plottables.CandlestickPlot Candlestick(System.Collections.Generic.List`1[ScottPlot.OHLC])
+ScottPlot.Plottables.ContourLines ContourLines(ScottPlot.Coordinates3d[,], Int32)
+ScottPlot.Plottables.ContourLines ContourLines(ScottPlot.Coordinates3d[], Int32)
+ScottPlot.Plottables.Coxcomb Coxcomb(System.Collections.Generic.IEnumerable`1[System.Double])
+ScottPlot.Plottables.Coxcomb Coxcomb(System.Collections.Generic.IList`1[ScottPlot.PieSlice])
+ScottPlot.Plottables.Crosshair Crosshair(Double, Double)
+ScottPlot.Plottables.DataLogger DataLogger()
+ScottPlot.Plottables.DataLogger DataLogger(System.Collections.Generic.List`1[ScottPlot.Coordinates])
+ScottPlot.Plottables.DataStreamer DataStreamer(Int32, Double)
+ScottPlot.Plottables.DataStreamerXY DataStreamerXY(Int32)
+ScottPlot.Plottables.Ellipse AnnularEllipticalSector(Int32, Int32, Double, Double, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse AnnularEllipticalSector(ScottPlot.Coordinates, Double, Double, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse AnnularSector(Int32, Int32, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse AnnularSector(ScottPlot.Coordinates, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse Arc(Double, Double, Double, ScottPlot.Angle, ScottPlot.Angle)
+ScottPlot.Plottables.Ellipse Arc(ScottPlot.Coordinates, Double, ScottPlot.Angle, ScottPlot.Angle)
+ScottPlot.Plottables.Ellipse Circle(Double, Double, Double)
+ScottPlot.Plottables.Ellipse Circle(ScottPlot.Coordinates, Double)
+ScottPlot.Plottables.Ellipse CircleSector(Int32, Int32, Int32, ScottPlot.Angle, ScottPlot.Angle)
+ScottPlot.Plottables.Ellipse CircleSector(ScottPlot.Coordinates, Double, ScottPlot.Angle, ScottPlot.Angle)
+ScottPlot.Plottables.Ellipse Ellipse(Double, Double, Double, Double, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse Ellipse(ScottPlot.Coordinates, Double, Double, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse EllipticalArc(Double, Double, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse EllipticalArc(ScottPlot.Coordinates, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse EllipticalSector(Double, Double, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.Ellipse EllipticalSector(ScottPlot.Coordinates, Double, Double, ScottPlot.Angle, ScottPlot.Angle, System.Nullable`1[ScottPlot.Angle])
+ScottPlot.Plottables.ErrorBar ErrorBar(System.Collections.Generic.IReadOnlyList`1[System.Double], System.Collections.Generic.IReadOnlyList`1[System.Double], System.Collections.Generic.IReadOnlyList`1[System.Double])
+ScottPlot.Plottables.FillY FillY(Double[], Double[], Double[])
+ScottPlot.Plottables.FillY FillY(ScottPlot.Plottables.Scatter, ScottPlot.Plottables.Scatter)
+ScottPlot.Plottables.FillY FillY(System.Collections.Generic.ICollection`1[System.ValueTuple`3[System.Double,System.Double,System.Double]])
+ScottPlot.Plottables.FillY FillY[T](System.Collections.Generic.ICollection`1[T], System.Func`2[T,System.ValueTuple`3[System.Double,System.Double,System.Double]])
+ScottPlot.Plottables.FunctionPlot Function(ScottPlot.IFunctionSource)
+ScottPlot.Plottables.FunctionPlot Function(System.Func`2[System.Double,System.Double])
+ScottPlot.Plottables.Heatmap Heatmap(Double[,])
+ScottPlot.Plottables.Heatmap Heatmap(ScottPlot.Coordinates3d[,])
+ScottPlot.Plottables.HistogramBars Histogram(ScottPlot.Statistics.Histogram, System.Nullable`1[ScottPlot.Color], Boolean)
+ScottPlot.Plottables.HorizontalLine HorizontalLine(Double, Single, System.Nullable`1[ScottPlot.Color], ScottPlot.LinePattern)
+ScottPlot.Plottables.HorizontalSpan HorizontalSpan(Double, Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.ImageMarker ImageMarker(ScottPlot.Coordinates, ScottPlot.Image, Single)
+ScottPlot.Plottables.ImageRect ImageRect(ScottPlot.Image, ScottPlot.CoordinateRect)
+ScottPlot.Plottables.Interactive.InteractiveHorizontalLine InteractiveHorizontalLine(Double)
+ScottPlot.Plottables.Interactive.InteractiveHorizontalLineSegment InteractiveHorizontalLineSegment(Double, Double, Double)
+ScottPlot.Plottables.Interactive.InteractiveHorizontalSpan InteractiveHorizontalSpan(Double, Double)
+ScottPlot.Plottables.Interactive.InteractiveLineSegment InteractiveLineSegment(ScottPlot.CoordinateLine)
+ScottPlot.Plottables.Interactive.InteractiveMarker InteractiveMarker(ScottPlot.Coordinates)
+ScottPlot.Plottables.Interactive.InteractiveRectangle InteractiveRectangle(ScottPlot.CoordinateRect)
+ScottPlot.Plottables.Interactive.InteractiveTrendLine InteractiveTrendLine(ScottPlot.CoordinateLine)
+ScottPlot.Plottables.Interactive.InteractiveVerticalLine InteractiveVerticalLine(Double)
+ScottPlot.Plottables.Interactive.InteractiveVerticalLineSegment InteractiveVerticalLineSegment(Double, Double, Double)
+ScottPlot.Plottables.Interactive.InteractiveVerticalSpan InteractiveVerticalSpan(Double, Double)
+ScottPlot.Plottables.LinePlot Line(Double, Double, Double, Double)
+ScottPlot.Plottables.LinePlot Line(ScottPlot.CoordinateLine)
+ScottPlot.Plottables.LinePlot Line(ScottPlot.Coordinates, ScottPlot.Coordinates)
+ScottPlot.Plottables.LollipopPlot Lollipop(Double[], Double[])
+ScottPlot.Plottables.LollipopPlot Lollipop(Double[])
+ScottPlot.Plottables.LollipopPlot Lollipop(System.Collections.Generic.IEnumerable`1[ScottPlot.Coordinates])
+ScottPlot.Plottables.Marker Marker(Double, Double, ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Marker Marker(ScottPlot.Coordinates, ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Markers Markers(Double[], Double[], ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Markers Markers(ScottPlot.Coordinates[], ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Markers Markers(System.Collections.Generic.List`1[ScottPlot.Coordinates], ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Markers Markers[TX,TY](System.Collections.Generic.List`1[TX], System.Collections.Generic.List`1[TY], ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Markers Markers[TX,TY](TX[], TY[], ScottPlot.MarkerShape, Single, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.OhlcPlot OHLC(System.Collections.Generic.List`1[ScottPlot.OHLC])
+ScottPlot.Plottables.Phasor Phasor()
+ScottPlot.Plottables.Phasor Phasor(System.Collections.Generic.IEnumerable`1[ScottPlot.PolarCoordinates])
+ScottPlot.Plottables.Pie Pie(System.Collections.Generic.IEnumerable`1[System.Double])
+ScottPlot.Plottables.Pie Pie(System.Collections.Generic.IList`1[ScottPlot.PieSlice])
+ScottPlot.Plottables.PolarAxis PolarAxis(Double, Double, Int32, Int32)
+ScottPlot.Plottables.Polygon Polygon(ScottPlot.Coordinates[])
+ScottPlot.Plottables.Polygon Polygon[TX,TY](System.Collections.Generic.IEnumerable`1[TX], System.Collections.Generic.IEnumerable`1[TY])
+ScottPlot.Plottables.PopulationSymbol Population(Double[], Double)
+ScottPlot.Plottables.Radar Radar()
+ScottPlot.Plottables.Radar Radar(Double[,])
+ScottPlot.Plottables.Radar Radar(Double[])
+ScottPlot.Plottables.Radar Radar(System.Collections.Generic.IEnumerable`1[System.Collections.Generic.IEnumerable`1[System.Double]])
+ScottPlot.Plottables.RadialGaugePlot RadialGaugePlot(System.Collections.Generic.IEnumerable`1[System.Double])
+ScottPlot.Plottables.Rectangle Rectangle(Double, Double, Double, Double)
+ScottPlot.Plottables.Rectangle Rectangle(ScottPlot.CoordinateRect)
+ScottPlot.Plottables.ScaleBar ScaleBar(Double, Double)
+ScottPlot.Plottables.Scatter Scatter(Double, Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter(Double[], Double[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter(ScottPlot.Coordinates, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter(ScottPlot.Coordinates[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter(ScottPlot.IScatterSource, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter(System.Collections.Generic.List`1[ScottPlot.Coordinates], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter[T1,T2](System.Collections.Generic.List`1[T1], System.Collections.Generic.List`1[T2], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter Scatter[T1,T2](T1[], T2[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine(Double[], Double[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine(ScottPlot.Coordinates[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine(ScottPlot.IScatterSource, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine(System.Collections.Generic.List`1[ScottPlot.Coordinates], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine[T1,T2](System.Collections.Generic.List`1[T1], System.Collections.Generic.List`1[T2], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterLine[T1,T2](T1[], T2[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints(Double[], Double[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints(ScottPlot.Coordinates[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints(ScottPlot.IScatterSource, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints(System.Collections.Generic.List`1[ScottPlot.Coordinates], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints[T1,T2](System.Collections.Generic.List`1[T1], System.Collections.Generic.List`1[T2], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Scatter ScatterPoints[T1,T2](T1[], T2[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Signal Signal(Double[], Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Signal Signal(ScottPlot.ISignalSource, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Signal Signal[T](System.Collections.Generic.IReadOnlyList`1[T], Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Signal Signal[T](T[], Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.Signal SignalConst[T](T[], Double, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.SignalXY SignalXY(Double[], Double[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.SignalXY SignalXY(ScottPlot.ISignalXYSource, System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.SignalXY SignalXY[TX,TY](System.Collections.Generic.IReadOnlyList`1[TX], System.Collections.Generic.IReadOnlyList`1[TY], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.SignalXY SignalXY[TX,TY](TX[], TY[], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.SmithChartAxis SmithChartAxis()
+ScottPlot.Plottables.Text Text(System.String, Double, Double)
+ScottPlot.Plottables.Text Text(System.String, ScottPlot.Coordinates)
+ScottPlot.Plottables.Tooltip Tooltip(Double, Double, System.String, Double, Double)
+ScottPlot.Plottables.Tooltip Tooltip(ScottPlot.Coordinates, System.String, ScottPlot.Coordinates)
+ScottPlot.Plottables.TriangularAxis TriangularAxis(Boolean, Boolean, Boolean)
+ScottPlot.Plottables.VectorField VectorField(System.Collections.Generic.IList`1[ScottPlot.RootedCoordinateVector], System.Nullable`1[ScottPlot.Color])
+ScottPlot.Plottables.VerticalLine VerticalLine(Double, Single, System.Nullable`1[ScottPlot.Color], ScottPlot.LinePattern)
+ScottPlot.Plottables.VerticalSpan VerticalSpan(Double, Double, System.Nullable`1[ScottPlot.Color])
+System.String ToString()
+System.Type GetType()
+System.ValueTuple`2[ScottPlot.Plottables.Annotation,ScottPlot.Plottables.Annotation] BackgroundText(System.String, System.String, System.Nullable`1[ScottPlot.Color], Double, Double)
+
+===== Scatter properties =====
+AxisGradientDirection AxisGradientDirection
+Boolean FillY
+Boolean FillYAbove
+Boolean FillYBelow
+Boolean IsVisible
+Boolean Smooth
+Color Color
+Color FillYAboveColor
+Color FillYBelowColor
+Color FillYColor
+Color LineColor
+Color MarkerColor
+Color MarkerFillColor
+Color MarkerLineColor
+Double FillYValue
+Double OffsetX
+Double OffsetY
+Double ScaleX
+Double ScaleY
+Double SmoothTension
+IAxes Axes
+IEnumerable`1 LegendItems
+Int32 MaxRenderIndex
+Int32 MinRenderIndex
+IPathStrategy PathStrategy
+IScatterSource Data
+LinePattern LinePattern
+LineStyle LineStyle
+List`1 ColorPositions
+MarkerShape MarkerShape
+MarkerStyle MarkerStyle
+Single LineWidth
+Single MarkerLineWidth
+Single MarkerSize
+String Label
+String LegendText
+
+===== Bar type + properties =====
+AxisLimits AxisLimits
+Boolean CenterLabel
+Boolean ErrorNegative
+Boolean ErrorPositive
+Boolean IsVisible
+Boolean LabelOnTop
+Color BorderColor
+Color FillColor
+Color FillHatchColor
+Color LineColor
+CoordinateRect Rect
+Double Error
+Double ErrorSize
+Double Position
+Double Size
+Double Value
+Double ValueBase
+FillStyle FillStyle
+IEnumerable`1 ErrorLines
+IHatch FillHatch
+LinePattern LinePattern
+LineStyle LineStyle
+Orientation Orientation
+Single BorderLineWidth
+Single ErrorLineWidth
+Single LabelOffset
+Single LineWidth
+String Label
+String ValueLabel
+
+===== Colors static members =====
+ScottPlot.Color AliceBlue
+ScottPlot.Color AntiqueWhite
+ScottPlot.Color Aqua
+ScottPlot.Color Aquamarine
+ScottPlot.Color Azure
+ScottPlot.Color Beige
+ScottPlot.Color Bisque
+ScottPlot.Color Black
+ScottPlot.Color BlanchedAlmond
+ScottPlot.Color Blue
+ScottPlot.Color BlueViolet
+ScottPlot.Color Brown
+ScottPlot.Color BurlyWood
+ScottPlot.Color C0
+ScottPlot.Color C1
+ScottPlot.Color C2
+ScottPlot.Color C3
+ScottPlot.Color C4
+ScottPlot.Color C5
+ScottPlot.Color C6
+ScottPlot.Color C7
+ScottPlot.Color C8
+ScottPlot.Color C9
+ScottPlot.Color CadetBlue
+ScottPlot.Color Chartreuse
+ScottPlot.Color Chocolate
+ScottPlot.Color Coral
+ScottPlot.Color CornflowerBlue
+ScottPlot.Color Cornsilk
+ScottPlot.Color Crimson
+ScottPlot.Color Cyan
+ScottPlot.Color DarkBlue
+ScottPlot.Color DarkCyan
+ScottPlot.Color DarkGoldenRod
+ScottPlot.Color DarkGray
+ScottPlot.Color DarkGreen
+ScottPlot.Color DarkGrey
+ScottPlot.Color DarkKhaki
+ScottPlot.Color DarkMagenta
+ScottPlot.Color DarkOliveGreen
+ScottPlot.Color DarkOrange
+ScottPlot.Color DarkOrchid
+ScottPlot.Color DarkRed
+ScottPlot.Color DarkSalmon
+ScottPlot.Color DarkSeaGreen
+ScottPlot.Color DarkSlateBlue
+ScottPlot.Color DarkSlateGray
+ScottPlot.Color DarkSlateGrey
+ScottPlot.Color DarkTurquoise
+ScottPlot.Color DarkViolet
+ScottPlot.Color DeepPink
+ScottPlot.Color DeepSkyBlue
+ScottPlot.Color DimGray
+ScottPlot.Color DimGrey
+ScottPlot.Color DodgerBlue
+ScottPlot.Color FireBrick
+ScottPlot.Color FloralWhite
+ScottPlot.Color ForestGreen
+ScottPlot.Color Fuchsia
+ScottPlot.Color Gainsboro
+ScottPlot.Color get_AliceBlue()
+ScottPlot.Color get_AntiqueWhite()
+ScottPlot.Color get_Aqua()
+ScottPlot.Color get_Aquamarine()
+ScottPlot.Color get_Azure()
+ScottPlot.Color get_Beige()
+ScottPlot.Color get_Bisque()
+ScottPlot.Color get_Black()
+ScottPlot.Color get_BlanchedAlmond()
+ScottPlot.Color get_Blue()
+ScottPlot.Color get_BlueViolet()
+ScottPlot.Color get_Brown()
+ScottPlot.Color get_BurlyWood()
+ScottPlot.Color get_C0()
+ScottPlot.Color get_C1()
+ScottPlot.Color get_C2()
+ScottPlot.Color get_C3()
+ScottPlot.Color get_C4()
+ScottPlot.Color get_C5()
+ScottPlot.Color get_C6()
+ScottPlot.Color get_C7()
+ScottPlot.Color get_C8()
+ScottPlot.Color get_C9()
+ScottPlot.Color get_CadetBlue()
+ScottPlot.Color get_Chartreuse()
+ScottPlot.Color get_Chocolate()
+ScottPlot.Color get_Coral()
+ScottPlot.Color get_CornflowerBlue()
+ScottPlot.Color get_Cornsilk()
+ScottPlot.Color get_Crimson()
+ScottPlot.Color get_Cyan()
+ScottPlot.Color get_DarkBlue()
+ScottPlot.Color get_DarkCyan()
+ScottPlot.Color get_DarkGoldenRod()
+ScottPlot.Color get_DarkGray()
+ScottPlot.Color get_DarkGreen()
+ScottPlot.Color get_DarkGrey()
+ScottPlot.Color get_DarkKhaki()
+ScottPlot.Color get_DarkMagenta()
+ScottPlot.Color get_DarkOliveGreen()
+ScottPlot.Color get_DarkOrange()
+ScottPlot.Color get_DarkOrchid()
+ScottPlot.Color get_DarkRed()
+ScottPlot.Color get_DarkSalmon()
+ScottPlot.Color get_DarkSeaGreen()
+ScottPlot.Color get_DarkSlateBlue()
+ScottPlot.Color get_DarkSlateGray()
+ScottPlot.Color get_DarkSlateGrey()
+ScottPlot.Color get_DarkTurquoise()
+ScottPlot.Color get_DarkViolet()
+ScottPlot.Color get_DeepPink()
+ScottPlot.Color get_DeepSkyBlue()
+ScottPlot.Color get_DimGray()
+ScottPlot.Color get_DimGrey()
+ScottPlot.Color get_DodgerBlue()
+ScottPlot.Color get_FireBrick()
+ScottPlot.Color get_FloralWhite()
+ScottPlot.Color get_ForestGreen()
+ScottPlot.Color get_Fuchsia()
+ScottPlot.Color get_Gainsboro()
+ScottPlot.Color get_GhostWhite()
+ScottPlot.Color get_Gold()
+ScottPlot.Color get_GoldenRod()
+ScottPlot.Color get_Gray()
+ScottPlot.Color get_Green()
+ScottPlot.Color get_GreenYellow()
+ScottPlot.Color get_Grey()
+ScottPlot.Color get_HoneyDew()
+ScottPlot.Color get_HotPink()
+ScottPlot.Color get_IndianRed()
+ScottPlot.Color get_Indigo()
+ScottPlot.Color get_Ivory()
+ScottPlot.Color get_Khaki()
+ScottPlot.Color get_Lavender()
+ScottPlot.Color get_LavenderBlush()
+ScottPlot.Color get_LawnGreen()
+ScottPlot.Color get_LemonChiffon()
+ScottPlot.Color get_LightBlue()
+ScottPlot.Color get_LightCoral()
+ScottPlot.Color get_LightCyan()
+ScottPlot.Color get_LightGoldenRodYellow()
+ScottPlot.Color get_LightGray()
+ScottPlot.Color get_LightGreen()
+ScottPlot.Color get_LightGrey()
+ScottPlot.Color get_LightPink()
+ScottPlot.Color get_LightSalmon()
+ScottPlot.Color get_LightSeaGreen()
+ScottPlot.Color get_LightSkyBlue()
+ScottPlot.Color get_LightSlateGray()
+ScottPlot.Color get_LightSlateGrey()
+ScottPlot.Color get_LightSteelBlue()
+ScottPlot.Color get_LightYellow()
+ScottPlot.Color get_Lime()
+ScottPlot.Color get_LimeGreen()
+ScottPlot.Color get_Linen()
+ScottPlot.Color get_Magenta()
+ScottPlot.Color get_Maroon()
+ScottPlot.Color get_MediumAquaMarine()
+ScottPlot.Color get_MediumBlue()
+ScottPlot.Color get_MediumOrchid()
+ScottPlot.Color get_MediumPurple()
+ScottPlot.Color get_MediumSeaGreen()
+ScottPlot.Color get_MediumSlateBlue()
+ScottPlot.Color get_MediumSpringGreen()
+ScottPlot.Color get_MediumTurquoise()
+ScottPlot.Color get_MediumVioletRed()
+ScottPlot.Color get_MidnightBlue()
+ScottPlot.Color get_MintCream()
+ScottPlot.Color get_MistyRose()
+ScottPlot.Color get_Moccasin()
+ScottPlot.Color get_NavajoWhite()
+ScottPlot.Color get_Navy()
+ScottPlot.Color get_OldLace()
+ScottPlot.Color get_Olive()
+ScottPlot.Color get_OliveDrab()
+ScottPlot.Color get_Orange()
+ScottPlot.Color get_OrangeRed()
+ScottPlot.Color get_Orchid()
+ScottPlot.Color get_PaleGoldenRod()
+ScottPlot.Color get_PaleGreen()
+ScottPlot.Color get_PaleTurquoise()
+ScottPlot.Color get_PaleVioletRed()
+ScottPlot.Color get_PapayaWhip()
+ScottPlot.Color get_PeachPuff()
+ScottPlot.Color get_Peru()
+ScottPlot.Color get_Pink()
+ScottPlot.Color get_Plum()
+ScottPlot.Color get_PowderBlue()
+ScottPlot.Color get_Purple()
+ScottPlot.Color get_RebeccaPurple()
+ScottPlot.Color get_Red()
+ScottPlot.Color get_RosyBrown()
+ScottPlot.Color get_RoyalBlue()
+ScottPlot.Color get_SaddleBrown()
+ScottPlot.Color get_Salmon()
+ScottPlot.Color get_SandyBrown()
+ScottPlot.Color get_ScottPlotPink()
+ScottPlot.Color get_ScottPlotPurple()
+ScottPlot.Color get_SeaGreen()
+ScottPlot.Color get_SeaShell()
+ScottPlot.Color get_Sienna()
+ScottPlot.Color get_Silver()
+ScottPlot.Color get_SkyBlue()
+ScottPlot.Color get_SlateBlue()
+ScottPlot.Color get_SlateGray()
+ScottPlot.Color get_SlateGrey()
+ScottPlot.Color get_Snow()
+ScottPlot.Color get_SpringGreen()
+ScottPlot.Color get_SteelBlue()
+ScottPlot.Color get_Tan()
+ScottPlot.Color get_Teal()
+ScottPlot.Color get_Thistle()
+ScottPlot.Color get_Tomato()
+ScottPlot.Color get_Transparent()
+ScottPlot.Color get_Turquoise()
+ScottPlot.Color get_Violet()
+ScottPlot.Color get_Wheat()
+ScottPlot.Color get_White()
+ScottPlot.Color get_WhiteSmoke()
+ScottPlot.Color get_Yellow()
+ScottPlot.Color get_YellowGreen()
+ScottPlot.Color GhostWhite
+ScottPlot.Color Gold
+ScottPlot.Color GoldenRod
+ScottPlot.Color Gray
+ScottPlot.Color Green
+ScottPlot.Color GreenYellow
+ScottPlot.Color Grey
+ScottPlot.Color HoneyDew
+ScottPlot.Color HotPink
+ScottPlot.Color IndianRed
+ScottPlot.Color Indigo
+ScottPlot.Color Ivory
+ScottPlot.Color Khaki
+ScottPlot.Color Lavender
+ScottPlot.Color LavenderBlush
+ScottPlot.Color LawnGreen
+ScottPlot.Color LemonChiffon
+ScottPlot.Color LightBlue
+ScottPlot.Color LightCoral
+ScottPlot.Color LightCyan
+ScottPlot.Color LightGoldenRodYellow
+ScottPlot.Color LightGray
+ScottPlot.Color LightGreen
+ScottPlot.Color LightGrey
+ScottPlot.Color LightPink
+ScottPlot.Color LightSalmon
+ScottPlot.Color LightSeaGreen
+ScottPlot.Color LightSkyBlue
+ScottPlot.Color LightSlateGray
+ScottPlot.Color LightSlateGrey
+ScottPlot.Color LightSteelBlue
+ScottPlot.Color LightYellow
+ScottPlot.Color Lime
+ScottPlot.Color LimeGreen
+ScottPlot.Color Linen
+ScottPlot.Color Magenta
+ScottPlot.Color Maroon
+ScottPlot.Color MediumAquaMarine
+ScottPlot.Color MediumBlue
+ScottPlot.Color MediumOrchid
+ScottPlot.Color MediumPurple
+ScottPlot.Color MediumSeaGreen
+ScottPlot.Color MediumSlateBlue
+ScottPlot.Color MediumSpringGreen
+ScottPlot.Color MediumTurquoise
+ScottPlot.Color MediumVioletRed
+ScottPlot.Color MidnightBlue
+ScottPlot.Color MintCream
+ScottPlot.Color MistyRose
+ScottPlot.Color Moccasin
+ScottPlot.Color NavajoWhite
+ScottPlot.Color Navy
+ScottPlot.Color OldLace
+ScottPlot.Color Olive
+ScottPlot.Color OliveDrab
+ScottPlot.Color Orange
+ScottPlot.Color OrangeRed
+ScottPlot.Color Orchid
+ScottPlot.Color PaleGoldenRod
+ScottPlot.Color PaleGreen
+ScottPlot.Color PaleTurquoise
+ScottPlot.Color PaleVioletRed
+ScottPlot.Color PapayaWhip
+ScottPlot.Color PeachPuff
+ScottPlot.Color Peru
+ScottPlot.Color Pink
+ScottPlot.Color Plum
+ScottPlot.Color PowderBlue
+ScottPlot.Color Purple
+ScottPlot.Color RebeccaPurple
+ScottPlot.Color Red
+ScottPlot.Color RosyBrown
+ScottPlot.Color RoyalBlue
+ScottPlot.Color SaddleBrown
+ScottPlot.Color Salmon
+ScottPlot.Color SandyBrown
+ScottPlot.Color ScottPlotPink
+ScottPlot.Color ScottPlotPurple
+ScottPlot.Color SeaGreen
+ScottPlot.Color SeaShell
+ScottPlot.Color Sienna
+ScottPlot.Color Silver
+ScottPlot.Color SkyBlue
+ScottPlot.Color SlateBlue
+ScottPlot.Color SlateGray
+ScottPlot.Color SlateGrey
+ScottPlot.Color Snow
+ScottPlot.Color SpringGreen
+ScottPlot.Color SteelBlue
+ScottPlot.Color Tan
+ScottPlot.Color Teal
+ScottPlot.Color Thistle
+ScottPlot.Color Tomato
+ScottPlot.Color Transparent
+ScottPlot.Color Turquoise
+ScottPlot.Color Violet
+ScottPlot.Color Wheat
+ScottPlot.Color White
+ScottPlot.Color WhiteSmoke
+ScottPlot.Color Yellow
+ScottPlot.Color YellowGreen
+ScottPlot.Color[] Category10
+ScottPlot.Color[] Category20
+ScottPlot.Color[] ColorblindFriendly
+ScottPlot.Color[] ColorblindFriendlyDark
+ScottPlot.Color[] RandomHue(Int32)
+ScottPlot.Colors+Windows
+ScottPlot.Colors+Xkcd
+System.Collections.Generic.IEnumerable`1[ScottPlot.Color] Rainbow(Int32)
+System.Collections.Generic.List`1[System.ValueTuple`2[System.String,ScottPlot.Color]] GetNamedColors()
+
+===== Plot methods of interest =====
+ScottPlot.Legend ShowLegend()
+ScottPlot.Legend ShowLegend(ScottPlot.Alignment, ScottPlot.Orientation)
+ScottPlot.Legend ShowLegend(ScottPlot.Alignment)
+ScottPlot.Legend ShowLegend(System.Collections.Generic.IEnumerable`1[ScottPlot.LegendItem], ScottPlot.Alignment)
+ScottPlot.Panels.LegendPanel ShowLegend(ScottPlot.Edge)
+Void Clear()
+Void Clear[T]()
+Void Title(Boolean)
+Void Title(System.String, System.Nullable`1[System.Single])
+
+===== AxisManager interesting =====
+ScottPlot.AxisPanels.BottomAxis NumericTicksBottom()
+ScottPlot.AxisPanels.DateTimeXAxis DateTimeTicksBottom()
+ScottPlot.IAutoScaler get_AutoScaler()
+Void AutoScale(ScottPlot.IXAxis, ScottPlot.IYAxis, Boolean, Boolean)
+Void AutoScale(System.Collections.Generic.IEnumerable`1[ScottPlot.IPlottable])
+Void AutoScale(System.Nullable`1[System.Boolean], System.Nullable`1[System.Boolean])
+Void AutoScaleExpand()
+Void AutoScaleExpand(ScottPlot.IXAxis, ScottPlot.IYAxis)
+Void AutoScaleExpandX()
+Void AutoScaleExpandX(ScottPlot.IXAxis)
+Void AutoScaleExpandY()
+Void AutoScaleExpandY(ScottPlot.IYAxis)
+Void AutoScaleX()
+Void AutoScaleX(ScottPlot.IXAxis)
+Void AutoScaleX(System.Collections.Generic.IEnumerable`1[ScottPlot.IPlottable])
+Void AutoScaleY()
+Void AutoScaleY(ScottPlot.IYAxis)
+Void AutoScaleY(System.Collections.Generic.IEnumerable`1[ScottPlot.IPlottable])
+Void set_AutoScaler(ScottPlot.IAutoScaler)
+
+===== AxisBase tick/label members =====
+Boolean get_ClipLabel()
+Boolean get_LabelBold()
+Boolean get_LabelItalic()
+Boolean get_LabelUnderline()
+Double get_LabelUnderlineOffset()
+Double get_LabelUnderlineWidth()
+ScottPlot.Alignment get_LabelAlignment()
+ScottPlot.Color get_LabelBackgroundColor()
+ScottPlot.Color get_LabelBorderColor()
+ScottPlot.Color get_LabelFontColor()
+ScottPlot.Color get_LabelShadowColor()
+ScottPlot.ITickGenerator get_TickGenerator()
+ScottPlot.LabelStyle get_Label()
+ScottPlot.LabelStyle get_LabelStyle()
+ScottPlot.LabelStyle get_TickLabelStyle()
+ScottPlot.PixelOffset get_LabelShadowOffset()
+ScottPlot.PixelPadding get_EmptyLabelPadding()
+ScottPlot.PixelPadding get_LabelPixelPadding()
+ScottPlot.PixelPadding get_PaddingBetweenTickAndAxisLabels()
+ScottPlot.PixelPadding get_PaddingOutsideAxisLabels()
+ScottPlot.PixelRect get_LabelLastRenderPixelRect()
+ScottPlot.TickMarkStyle get_MajorTickStyle()
+ScottPlot.TickMarkStyle get_MinorTickStyle()
+Single get_LabelBorderRadius()
+Single get_LabelBorderRadiusX()
+Single get_LabelBorderRadiusY()
+Single get_LabelBorderWidth()
+Single get_LabelFontSize()
+Single get_LabelOffsetX()
+Single get_LabelOffsetY()
+Single get_LabelRotation()
+System.Nullable`1[System.Single] get_LabelLineSpacing()
+System.String get_LabelFontName()
+System.String get_LabelText()
+Void set_ClipLabel(Boolean)
+Void set_EmptyLabelPadding(ScottPlot.PixelPadding)
+Void set_LabelAlignment(ScottPlot.Alignment)
+Void set_LabelBackgroundColor(ScottPlot.Color)
+Void set_LabelBold(Boolean)
+Void set_LabelBorderColor(ScottPlot.Color)
+Void set_LabelBorderRadius(Single)
+Void set_LabelBorderRadiusX(Single)
+Void set_LabelBorderRadiusY(Single)
+Void set_LabelBorderWidth(Single)
+Void set_LabelFontColor(ScottPlot.Color)
+Void set_LabelFontName(System.String)
+Void set_LabelFontSize(Single)
+Void set_LabelItalic(Boolean)
+Void set_LabelLineSpacing(System.Nullable`1[System.Single])
+Void set_LabelOffsetX(Single)
+Void set_LabelOffsetY(Single)
+Void set_LabelPadding(Single)
+Void set_LabelPixelPadding(ScottPlot.PixelPadding)
+Void set_LabelRotation(Single)
+Void set_LabelShadowColor(ScottPlot.Color)
+Void set_LabelShadowOffset(ScottPlot.PixelOffset)
+Void set_LabelStyle(ScottPlot.LabelStyle)
+Void set_LabelText(System.String)
+Void set_LabelUnderline(Boolean)
+Void set_LabelUnderlineOffset(Double)
+Void set_LabelUnderlineWidth(Double)
+Void set_MajorTickStyle(ScottPlot.TickMarkStyle)
+Void set_MinorTickStyle(ScottPlot.TickMarkStyle)
+Void set_PaddingBetweenTickAndAxisLabels(ScottPlot.PixelPadding)
+Void set_PaddingOutsideAxisLabels(ScottPlot.PixelPadding)
+Void set_TickGenerator(ScottPlot.ITickGenerator)
+Void set_TickLabelStyle(ScottPlot.LabelStyle)
+Void SetTicks(Double[], System.String[])
+
+===== Legend members =====
+Alignment Alignment
+Alignment Location
+Alignment ShadowAlignment
+Boolean AllowMultiline
+Boolean DisplayPlottableLegendItems
+Boolean IsVisible
+Boolean SetBestFontOnEachRender
+Boolean ShowItemRectangles_DEBUG
+Boolean ShowItemsFromHiddenPlottables
+Boolean TightHorizontalWrapping
+Color BackgroundColor
+Color BackgroundHatchColor
+Color OutlineColor
+Color ShadowColor
+Double HiddenItemOpacity
+FillStyle BackgroundFill
+FillStyle BackgroundFillStyle
+FillStyle Font
+FillStyle ShadowFill
+FillStyle ShadowFillStyle
+IAxes Axes
+IEnumerable`1 LegendItems
+IHatch BackgroundHatch
+ILegendLayout Layout
+LinePattern OutlinePattern
+LineStyle OutlineStyle
+List`1 ManualItems
+Nullable`1 FontColor
+Nullable`1 FontSize
+Nullable`1 MarkerShapeOverride
+Orientation Orientation
+PixelOffset ShadowOffset
+PixelPadding InterItemPadding
+PixelPadding Margin
+PixelPadding Padding
+PixelSize LastRenderSize
+Plot Plot
+Single OutlineWidth
+Single SymbolHeight
+Single SymbolPadding
+Single SymbolWidth
+String FontName
+
+===== Plot.Axes property types =====
+Bottom: IXAxis
+Left: IYAxis
+Right: IYAxis
+Top: IXAxis
+
+===== LabelStyle =====
+Alignment Alignment
+Boolean AntiAliasBackground
+Boolean AntiAliasText
+Boolean Bold
+Boolean IsVisible
+Boolean RTLSupport
+Boolean SubpixelText
+Boolean Underline
+Color BackColor
+Color BackgroundColor
+Color BorderColor
+Color ForeColor
+Color ShadowColor
+Double UnderlineOffset
+Double UnderlineWidth
+Image Image
+LabelStyle Default
+Nullable`1 LineSpacing
+PixelOffset ShadowOffset
+PixelPadding PixelPadding
+PixelRect LastRenderPixelRect
+Single BorderRadius
+Single BorderWidth
+Single FontSize
+Single Padding
+Single Rotation
+SKTypeface Font
+String FontName
+String Text
+
+===== Plot style-related methods =====
+ScottPlot.Grids.DefaultGrid get_Grid()
+ScottPlot.Grids.DefaultGrid Grid
+ScottPlot.Image GetLegendImage()
+ScottPlot.Legend get_Legend()
+ScottPlot.Legend HideLegend()
+ScottPlot.Legend Legend
+ScottPlot.Legend ShowLegend()
+ScottPlot.Legend ShowLegend(ScottPlot.Alignment, ScottPlot.Orientation)
+ScottPlot.Legend ShowLegend(ScottPlot.Alignment)
+ScottPlot.Legend ShowLegend(System.Collections.Generic.IEnumerable`1[ScottPlot.LegendItem], ScottPlot.Alignment)
+ScottPlot.Panels.LegendPanel ShowLegend(ScottPlot.Edge)
+ScottPlot.PlotStyle GetStyle()
+ScottPlot.Stylers.PlotStyler get_Style()
+ScottPlot.Stylers.PlotStyler Style
+System.String GetLegendSvgXml()
+Void HideAxesAndGrid()
+Void HideGrid()
+Void set_Legend(ScottPlot.Legend)
+Void SetStyle(ScottPlot.Plot)
+Void SetStyle(ScottPlot.PlotStyle)
+Void ShowAxesAndGrid()
+Void ShowGrid()
+
+===== AxisManager props =====
+Action`1 ContinuousAutoscaleAction
+Boolean ContinuouslyAutoscale
+Boolean LimitsHaveBeenSet
+DefaultGrid DefaultGrid
+IAutoScaler AutoScaler
+IXAxis Bottom
+IXAxis Top
+IYAxis Left
+IYAxis Right
+List`1 AllGrids
+List`1 CustomGrids
+List`1 Rules
+TitlePanel Title
+

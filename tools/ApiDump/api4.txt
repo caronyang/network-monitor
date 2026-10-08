@@ -1,0 +1,154 @@
+﻿===== IAxis members =====
+ITickGenerator TickGenerator
+LabelStyle Label
+LabelStyle TickLabelStyle
+ScottPlot.ITickGenerator get_TickGenerator()
+ScottPlot.LabelStyle get_Label()
+ScottPlot.LabelStyle get_TickLabelStyle()
+ScottPlot.TickMarkStyle get_MajorTickStyle()
+ScottPlot.TickMarkStyle get_MinorTickStyle()
+TickMarkStyle MajorTickStyle
+TickMarkStyle MinorTickStyle
+Void RegenerateTicks(ScottPlot.PixelLength, ScottPlot.Paint)
+Void set_MajorTickStyle(ScottPlot.TickMarkStyle)
+Void set_MinorTickStyle(ScottPlot.TickMarkStyle)
+Void set_TickGenerator(ScottPlot.ITickGenerator)
+Void set_TickLabelStyle(ScottPlot.LabelStyle)
+Void SetTicks(Double[], System.String[])
+
+===== IXAxis members =====
+ITickGenerator TickGenerator
+LabelStyle Label
+LabelStyle TickLabelStyle
+ScottPlot.ITickGenerator get_TickGenerator()
+ScottPlot.LabelStyle get_Label()
+ScottPlot.LabelStyle get_TickLabelStyle()
+ScottPlot.TickMarkStyle get_MajorTickStyle()
+ScottPlot.TickMarkStyle get_MinorTickStyle()
+TickMarkStyle MajorTickStyle
+TickMarkStyle MinorTickStyle
+Void RegenerateTicks(ScottPlot.PixelLength, ScottPlot.Paint)
+Void set_MajorTickStyle(ScottPlot.TickMarkStyle)
+Void set_MinorTickStyle(ScottPlot.TickMarkStyle)
+Void set_TickGenerator(ScottPlot.ITickGenerator)
+Void set_TickLabelStyle(ScottPlot.LabelStyle)
+Void SetTicks(Double[], System.String[])
+
+===== IYAxis members =====
+ITickGenerator TickGenerator
+LabelStyle Label
+LabelStyle TickLabelStyle
+ScottPlot.ITickGenerator get_TickGenerator()
+ScottPlot.LabelStyle get_Label()
+ScottPlot.LabelStyle get_TickLabelStyle()
+ScottPlot.TickMarkStyle get_MajorTickStyle()
+ScottPlot.TickMarkStyle get_MinorTickStyle()
+TickMarkStyle MajorTickStyle
+TickMarkStyle MinorTickStyle
+Void RegenerateTicks(ScottPlot.PixelLength, ScottPlot.Paint)
+Void set_MajorTickStyle(ScottPlot.TickMarkStyle)
+Void set_MinorTickStyle(ScottPlot.TickMarkStyle)
+Void set_TickGenerator(ScottPlot.ITickGenerator)
+Void set_TickLabelStyle(ScottPlot.LabelStyle)
+Void SetTicks(Double[], System.String[])
+
+===== Plot.Axes helpers =====
+AddBottomAxis
+AddLeftAxis
+AddPanel
+AddRightAxis
+AddTopAxis
+AddXAxis
+AddYAxis
+AntiAlias
+ApplyLinkedAxisRules
+AutoScale
+AutoScaleExpand
+AutoScaleExpandX
+AutoScaleExpandY
+AutoScaleX
+AutoScaleY
+Color
+DateTimeTicksBottom
+DefaultContinuousAutoscaleAction
+Equals
+Frame
+FrameColor
+Frameless
+FrameWidth
+get_AllGrids
+get_AutoScaler
+get_Bottom
+get_ContinuousAutoscaleAction
+get_ContinuouslyAutoscale
+get_CustomGrids
+get_DefaultGrid
+get_Left
+get_LimitsHaveBeenSet
+get_Right
+get_Rules
+get_Title
+get_Top
+GetAxes
+GetDataLimits
+GetHashCode
+GetLimits
+GetPanels
+GetType
+GetXAxes
+GetYAxes
+Hairline
+InvertX
+InvertY
+Link
+Margins
+MarginsX
+MarginsY
+NumericTicksBottom
+Pan
+RectifyX
+RectifyY
+Remove
+ReplaceNullAxesWithDefaults
+set_AutoScaler
+set_ContinuousAutoscaleAction
+set_ContinuouslyAutoscale
+set_DefaultGrid
+SetLimits
+SetLimitsX
+SetLimitsY
+SetupMultiplierNotation
+SquareUnits
+TightMargins
+ToString
+Unlink
+UnlinkAll
+Zoom
+ZoomIn
+ZoomOut
+ZoomOutX
+ZoomOutY
+
+===== DefaultGrid type =====
+ScottPlot.Grids.DefaultGrid
+
+===== FormsPlot-ish types in ScottPlot assembly =====
+
+===== TickLabelStyle type =====
+ScottPlot.LabelStyle
+
+===== AxisManager title/label helpers =====
+Action`1 ContinuousAutoscaleAction
+Boolean ContinuouslyAutoscale
+Boolean LimitsHaveBeenSet
+DefaultGrid DefaultGrid
+IAutoScaler AutoScaler
+IXAxis Bottom
+IXAxis Top
+IYAxis Left
+IYAxis Right
+List`1 AllGrids
+List`1 CustomGrids
+List`1 Rules
+TitlePanel Title
+
