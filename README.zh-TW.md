@@ -1,234 +1,174 @@
-# Network Monitor 網路監控程式
+﻿# Network Monitor 蝬脰楝??蝔?
 
 ![platform](https://img.shields.io/badge/platform-Windows-blue)
 ![.NET](https://img.shields.io/badge/.NET-10.0-brightgreen)
-![UI](https://img.shields.io/badge/UI-English%20%2F%20繁體中文-orange)
+![UI](https://img.shields.io/badge/UI-English%20%2F%20蝜?銝剜?-orange)
 
-[English](README.md) | **繁體中文**
+[English](README.md) | **蝜?銝剜?**
 
-Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低 CPU、低記憶體，
-將每個網路介面的上下傳量記錄到 SQLite，並內建折線圖／直條圖統計面板。
-介面支援繁體中文與英文即時切換。
+Windows 蝟餌絞??虜擏??單?蝬脰楝瘚???撌亙嚗銝?瑁?瑼? CPU??閮擃?
+撠??雯頝臭??Ｙ?銝??喲?閮???SQLite嚗蒂?批遣?????湔??絞閮?踴?隞?舀蝜?銝剜???????
+![銝餉?蝒(screenshots/main.png)
 
-![主視窗](screenshots/main.png)
+## ?
 
-## 功能
-
-| 類別 | 說明 |
+| 憿 | 隤芣? |
 |---|---|
-| 即時監控 | 每秒取樣各網路介面的下載／上傳速率，主視窗網格與系統匣提示即時更新 |
-| 系統匣常駐 | 關閉視窗後縮至系統匣繼續執行；tray 提示顯示目前總速率 |
-| 浮動面板 | 半透明小型置頂面板，顯示即時速率、**今日累積傳輸量**與 90 秒走勢（可拖曳、雙擊開主視窗、右鍵選單） |
-| 統計圖表 | **折線圖**：日（分時）／週（分日）／月（分日）；**直條圖**：日／週／月總量。可篩選單一介面、◀▶ 切換期間、匯出 CSV |
-| 資料記錄 | 每介面每分鐘一筆寫入 SQLite（WAL 模式），預設保留 180 天可調 |
-| 開機啟動 | 一鍵寫入 `HKCU\...\Run` 登錄項 |
-| 中英文 | tray 選單或設定視窗即時切換，無需重啟 |
-| 低資源 | 見下方[效能](#效能) |
-| **程序監控**（v1.1） | 每秒統計**特定程式**（如 chrome.exe）的上下載：主視窗程序列表（狀態／即時速率／今日／本次累計）、最多同時 5 個。資料以 `P:程式名` 鍵寫入同一 SQLite 量表（每分鐘一筆），統計圖表介面下拉可直接選程式繪圖。**需以系統管理員執行**（ETW `Microsoft-Windows-Kernel-Network`，TCP+UDP/IPv4+IPv6 全量精確）；未授權時程式正常運行，只在介面提示 |
-| **碼表統計**（v1.1） | 主視窗「⏱ 開始統計／⏹ 停止統計」：累計一段時間的下載／上傳總量，結束時寫入 SQLite，統計視窗下方列出所有紀錄（開始／結束／時間／下載／上傳），保留期間同 `retentionDays` |
+| ?單??? | 瘥??見?雯頝臭??Ｙ?銝?嚗??喲?嚗蜓閬?蝬脫?頂蝯勗?內?單??湔 |
+| 蝟餌絞??虜擏?| ??閬?敺葬?喟頂蝯勗蝜潛??瑁?嚗ray ?內憿舐內?桀?蝮賡? |
+| 瘚桀??Ｘ | ??撠?蝵桅??Ｘ嚗＊蝷箏????*隞蝝舐??唾撓??*??90 蝘粥?ｇ??舀??喋???銝餉?蝒?菟?殷? |
+| 蝯梯??” | **????*嚗嚗???嚗梧??嚗????嚗?**?湔???*嚗嚗梧??蜇?蝭拚?桐?隞???????????CSV |
+| 鞈?閮? | 瘥??Ｘ???銝蝑神??SQLite嚗AL 璅∪?嚗??身靽? 180 憭拙隤?|
+| ???? | 銝?萄神??`HKCU\...\Run` ?駁???|
+| 銝剛??| tray ?詨?身摰?蝒?????⊿??? |
+| 雿?皞?| 閬??鉀?](#?) |
+| **蝔???**嚗1.1嚗?| 瘥?蝯梯?**?孵?蝔?**嚗? chrome.exe嚗?銝?頛?銝餉?蝒?摨?銵剁?????單???嚗??伐??祆活蝝航?嚗?憭???5 ???誑 `P:蝔?? ?萄神?亙?銝 SQLite ?”嚗???銝蝑?嚗絞閮?銵其??Ｖ???湔?貊?撘鼓??*?隞亦頂蝯梁恣??瑁?**嚗TW `Microsoft-Windows-Kernel-Network`嚗CP+UDP/IPv4+IPv6 ?券?蝎曄Ⅱ嚗??芣?甈?蝔?甇?虜??嚗?其??Ｘ?蝷?|
+| **蝣潸”蝯梯?**嚗1.1嚗?| 銝餉?蝒 ??蝯梯?嚗 ?迫蝯梯???蝝航?銝畾菜???銝?嚗??喟蜇??蝯??神??SQLite嚗絞閮?蝒??孵??箸???????嚗?????嚗?頛?銝嚗?靽?????`retentionDays` |
 
-## 畫面截圖
+## ?恍?芸?
 
-| 統計圖表（英文） | 浮動面板 |
+| 蝯梯??”嚗?? | 瘚桀??Ｘ |
 |---|---|
-| ![統計圖表](screenshots/stats-en.png) | ![浮動面板](screenshots/panel.png) |
+| ![蝯梯??”](screenshots/stats-en.png) | ![瘚桀??Ｘ](screenshots/panel.png) |
 
-| 統計圖表（繁體中文） | |
+| 蝯梯??”嚗?擃葉?? | |
 |---|---|
-| ![統計圖表中文](screenshots/stats-zh.png) | |
+| ![蝯梯??”銝剜?](screenshots/stats-zh.png) | |
 
-## 系統需求
+## 蝟餌絞?瘙?
+- Windows 10嚗?9041 隞乩?嚗? Windows 11嚗?*x64嚗遣霅堆???x86**
+- **摰????芸??*嚗?摰?隞颱??辣
+- **portable ??*嚗?撌脣?鋆?.NET 10 Desktop Runtime嚗銝?](https://dotnet.microsoft.com/download/dotnet/10.0)嚗?- **蝔???嚗1.1嚗?*嚗?閬?*蝟餌絞蝞∠???*?瑁?嚗TW嚗??芣?甈??園??甇?虜嚗?撘??其??Ｘ?蝷箔蒂???誑蝞∠??∟澈???啣???
+## 摰??孵?
 
-- Windows 10（19041 以上）或 Windows 11，**x64（建議）或 x86**
-- **安裝版／自含版**：無需安裝任何元件
-- **portable 版**：需已安裝 .NET 10 Desktop Runtime（[下載](https://dotnet.microsoft.com/download/dotnet/10.0)）
-- **程序監控（v1.1）**：需要**系統管理員**執行（ETW）；未提權時其餘功能正常，程式會在介面提示並提供「以管理員身分重新啟動」
+### 摰?蝔?嚗遣霅堆?
 
-## 安裝方式
+1. ??[Releases](https://github.com/caronyang/network-monitor/releases) ??頛?   `NetworkMonitor-1.1.1-x64-setup.exe`嚗?2 雿?蝟餌絞隢?頛?`-x86-setup.exe`嚗?2. ?瑁?摰?嚗?鋆?蝔?暸嚗?   - ???銵冽敺??箏?撱箇?嚗??Ｘ敺??貊嚗?   - **???????*嚗神?亥?蝔??折?璈???????駁??潘?
+   - 摰?蝎暸??舀?望???擃葉????3. 銋??舐 *Windows 閮剖? ???蝔?* 閫?摰?嚗?   鞈?嚗%LOCALAPPDATA%\NetworkMonitor`嚗?*閫?摰???靽?**??
+### ??鋆?嚗ortable嚗?
+??[Releases](https://github.com/caronyang/network-monitor/releases) ??頛?`NetworkMonitor-1.1.1-portable-x64.zip`嚗圾憯葬敺銵?`NetworkMonitor.exe`
+嚗? .NET 10 Desktop Runtime嚗?
+?銵銵?`publish-portable.bat`嚗ramework-dependent嚗?`publish-selfcontained.bat`
+嚗?鋆?.NET嚗???頛詨鞈?憭曉銵?`NetworkMonitor.exe`??航?祉??亙? `x64` ??`x86` ?嚗?閮?`x64`嚗?
+## 雿輻隤芣?
 
-### 安裝程式（建議）
+### 銝餉?蝒?
+- **撌亙????*嚗蝯梯??”` ?絞閮?銵具閮剖?` ?身摰?蝣潸”蝘餉**閬??銝**???嚗?銝?嚗?  隤?隢 tray ?詨?身摰?蝒????撠??刻?蝒???園?
+- **瘛梯????*嚗otal ?單?蝮賡??oday嚗??亦敞閮?瘥?45 蝘?鞈?摨急?堆???  Session嚗甈∪??敞閮?
+- **蝔?????*嚗1.1嚗?`??蝔? (n/5)` + `?啣??圳嚗??箏銵葉蝔?嚗??詨??亦?扳??殷?嚗?  ?芯誑蝞∠??∪銵?憿舐內蝺???`???閬恣?甈?` ?內嚗???**敶撠店獢?*閰Ｗ??臬????
+- **蝔?蝬脫**嚗1.1嚗???? ??撘??箇嚗?瘥?憿舐內蝔???憒?`chrome.exe`嚗銵???  ?單?銝?嚗??喲??撠脣漲璇??亥??祆活蝝航?嚗?*???撖砍??脣?**嚗?嚗銵葉??  ?堆??芸銵?撠望蝘駁閫貊???耦皜豢??over 擃漁嚗?銝???撠??嚗?甈⊿＊蝷?3 ??
+  頞??舐**?脣?**瑼Ｚ?
+- **隞蝬脫**嚗???*???見???脣?**嚗?憿舐內??????蝬?撌脤???嚗???嚗?  銝暺?嚗??亥??臭??Ｗ?蝔晞???????頛?銝???撠脣漲璇??亥??祆活蝯梯?
+- **蝣潸”??*嚗1.1嚗?蝒?摨嚗?`????蝯梯?`嚗???迫蝯梯?` 蝘餃?ㄐ嚗?憪絞閮???
+  憿舐內??????單?蝝航?嚗??00:00:37 ??4.7 MB ??210 KB`嚗?
+### 蝟餌絞????喃?閫?
 
-1. 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-   `NetworkMonitor-1.1.0-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
-2. 執行安裝，安裝過程可勾選：
-   - 開始功能表捷徑（固定建立）、桌面捷徑（選用）
-   - **開機時自動啟動**（寫入與程式內開機啟動開關相同的登錄值）
-   - 安裝精靈支援英文與繁體中文介面
-3. 之後可由 *Windows 設定 → 應用程式* 解除安裝；
-   資料（`%LOCALAPPDATA%\NetworkMonitor`）**解除安裝時會保留**。
+- **??**嚗＊蝷箔蜓閬?
+- **?喲?詨**嚗＊蝷箔蜓閬?嚗絞閮?銵剁?瘚桀??Ｘ嚗?璈????隤?嚗身摰?蝯?蝔?
+- **?詨??內**嚗?蜇銝?嚗??喲?嚗? 5 蝘?堆?
 
-### 免安裝版（portable）
+### 蝯梯??Ｘ
 
-到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-`NetworkMonitor-1.1.0-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
-（需 .NET 10 Desktop Runtime）。
+- ?”嚗?????湔??
+- ??嚗?匝嚗???00-23嚗?常嚗??伐???嚗???30 憭抬?
+- 靘?嚗?券隞`嚗銝隞嚗?*?桐???蝔?**嚗1.1嚗? `chrome.exe (蝔?)`嚗?- `<` `>` ??銝???銝???`F5`嚗????萎??舀?雿?- `?臬 CSV` ?臬?桀??????- **?單?蝯梯?蝝??*嚗1.1嚗?蝒??對?嚗??箸?甈∠Ⅳ銵函絞閮?
+  ????????????蜇銝??蜇銝
 
-或自行執行 `publish-portable.bat`（framework-dependent）／`publish-selfcontained.bat`
-（免裝 .NET），再從輸出資料夾執行 `NetworkMonitor.exe`。兩支腳本皆接受 `x64` 或
-`x86` 參數（預設 `x64`）。
+### 瘚桀??Ｘ
 
-## 使用說明
+??蝵桅?撠?選?憿舐內?單?銝?嚗??喲???*隞蝝舐??唾撓??*??90 蝘粥?Ｕ??箇?憭批???v1.0 ?詨?嚗?44?118嚗??嗆???蝔???韏啣銝**??瘥?撘??憛?*
+嚗?蝔晞???????亦敞閮??憭?5 ??嚗?輯??擃????潔蝙?典摰?雿祝摨佗?
+**??銝?頞?Ｘ?楠**???喟宏????銝餉?蝒?菟?柴?` ??桅???蝵格?閮??
+![瘚桀??Ｘ](screenshots/panel.png)
 
-### 主視窗
-
-- **工具列按鈕**：`統計圖表` 開統計圖表、`設定` 開設定；碼表移至**視窗最下方**的專區（見下）；
-  語言請用 tray 選單或設定視窗切換，最小化用視窗原生控制項
-- **深色摘要列**：Total 即時總速率、Today（今日累計，每 45 秒從資料庫更新）、
-  Session（本次啟動累計）
-- **程式操作列**（v1.1）：`監控程式 (n/5)` + `新增…`（列出執行中程式，點選加入監控清單）；
-  未以管理員執行時顯示緊湊的 `⚠ 需要管理員權限` 提示，點擊後**彈出對話框**詢問是否提權重啟
-- **程式網格**（v1.1，監控 ≥1 個程式時出現）：每列顯示程式名（如 `chrome.exe`）、執行狀態、
-  即時下載／上傳速率與相對進度條、今日與本次累計；**列首的短寬小色塊**（綠＝執行中、
-  灰＝未執行）就是移除觸發鈕（手形游標、hover 高亮），不再有列尾 ×；一次顯示 3 列，
-  超過可用**捲動**檢視
-- **介面網格**：各列**列首同樣有小色塊**（僅顯示連線狀態，綠＝已連線、灰＝未連線，
-  不可點擊），接著是介面名稱、連線速率、即時下載／上傳速率與相對進度條、今日與本次統計
-- **碼表列**（v1.1，視窗最底部）：`⏱ 開始統計`／`⏹ 停止統計` 移到這裡；開始統計時同列
-  顯示運作狀態與即時累計（`⏱ 00:00:37 ↓ 4.7 MB ↑ 210 KB`）
-
-### 系統匣（右下角）
-
-- **雙擊**：顯示主視窗
-- **右鍵選單**：顯示主視窗／統計圖表／浮動面板／開機自動啟動／語言／設定／結束程式
-- **懸停提示**：目前總下載／上傳速率（每 5 秒更新）
-
-### 統計面板
-
-- 圖表：`折線圖`、`直條圖`
-- 期間：`日`（分時 00-23）、`週`（分日）、`月`（分日 30 天）
-- 來源：`全部介面`／單一介面／**單一監控程式**（v1.1，如 `chrome.exe (程式)`）
-- `<` `>` 切換上一期／下一期，`F5`／`←`→ 鍵也可操作
-- `匯出 CSV` 匯出目前區間資料
-- **即時統計紀錄**（v1.1，視窗下方）：列出每次碼表統計的
-  開始時間、結束時間、時間長、總下載、總上傳
-
-### 浮動面板
-
-半透明置頂小面板，顯示即時下載／上傳速率、**今日累積傳輸量**與 90 秒走勢。
-基礎大小與 v1.0 相同（244×118）；當有監控程式時，走勢下方**疊加每個程式的區塊**
-（名稱、即時 ↓↑、今日累計，最多 5 個），面板自動增高；各行值使用固定欄位寬度，
-**文字不再超出面板邊緣**。拖曳移動、雙擊開主視窗、右鍵選單、`×` 或選單關閉。位置會記憶。
-
-![浮動面板](screenshots/panel.png)
-
-## 資料與設定位置
-
+## 鞈??身摰?蝵?
 ```
 %LOCALAPPDATA%\NetworkMonitor\
-  networkmonitor.db                        SQLite（WAL；traffic 介面+P:程式、measurement 碼表）
-  settings.json                             設定（含 processMonitors 監控程式清單，最多 5）
-  crash.log                                 異常記錄
-  etw_selftest.txt                          ETW 自測輸出（--etw-selftest 產生）
-```
+  networkmonitor.db                        SQLite嚗AL嚗raffic 隞+P:蝔??easurement 蝣潸”嚗?  settings.json                             閮剖?嚗 processMonitors ??蝔?皜嚗?憭?5嚗?  crash.log                                 ?啣虜閮?
+  etw_selftest.txt                          ETW ?芣葫頛詨嚗?-etw-selftest ?Ｙ?嚗?```
 
-`settings.json` 主要欄位：
-
-| 欄位 | 說明 | 預設 |
+`settings.json` 銝餉?甈?嚗?
+| 甈? | 隤芣? | ?身 |
 |---|---|---|
 | `language` | `en` / `zh` | `en` |
-| `autoStart` | 開機自動執行 | `false` |
-| `floatingPanel` | 顯示浮動面板 | `false` |
-| `sampleIntervalMs` | 取樣間隔（200-60000） | `1000` |
-| `retentionDays` | 原始資料保留天數（1-3650） | `180` |
-| `includeLoopback` | 包含 127.0.0.1 | `false` |
-| `includeDisconnected` | 包含未連線介面 | `false` |
-| `showFilterAdapters` | 顯示封包篩選介面 | `false` |
-| `processMonitors` | 程式監控清單（小寫不含 `.exe`，最多 5 個） | `[]` |
+| `autoStart` | ???芸??瑁? | `false` |
+| `floatingPanel` | 憿舐內瘚桀??Ｘ | `false` |
+| `sampleIntervalMs` | ?見??嚗?00-60000嚗?| `1000` |
+| `retentionDays` | ??鞈?靽?憭拇嚗?-3650嚗?| `180` |
+| `includeLoopback` | ? 127.0.0.1 | `false` |
+| `includeDisconnected` | ??芷??隞 | `false` |
+| `showFilterAdapters` | 憿舐內撠?蝭拚隞 | `false` |
+| `processMonitors` | 蝔???皜嚗?撖思???`.exe`嚗?憭?5 ?? | `[]` |
 
-### 關於介面篩選（重要）
+### ?隞蝭拚嚗?閬?
 
-Windows 系統常有 50+ 個「隱藏介面」（WFP、Npcap、QoS、防毒軟體的 filter 適配器），
-它們**鏡像同一份流量**。若全部顯示，同一份封包會被重複計算多次。
+Windows 蝟餌絞撣豢? 50+ ????Ｕ?WFP?pcap?oS?瘥?擃? filter ?拚??剁?嚗?摰?*?∪???隞賣???*??券憿舐內嚗?銝隞賢???鋡恍?銴?蝞?甈～?
+?祉?撘?閮哨?
 
-本程式預設：
+1. **?撠?蝭拚隞**嚗MIB_IF_ROW2.Flags` bit1嚗??踹???閮?嚗?刻身摰葉??憿舐內
+2. **?????*??*??芷??隞** ???臬閮剖?銝剝???3. **? RAS/VPN ??WAN Miniport**嚗indows ?芸??賢???`Local Area Connection* N`嚗????* N`嚗?瘞賊?憿舐內?箏歇???雿??⊥???
+?迨甇?虜??銝??Ｘ??桀???箇?甇??撖阡?嚗??祉雯頝臬嚗???憭芰雯頝胯i-Fi????
+## ?
 
-1. **排除封包篩選介面**（`MIB_IF_ROW2.Flags` bit1）— 避免重複計算；可在設定中開啟顯示
-2. **排除回送介面**、**排除未連線介面** — 可在設定中開啟
-3. **排除 RAS/VPN 的 WAN Miniport**（Windows 自動命名的 `Local Area Connection* N`／`區域連線* N`）— 永遠顯示為已連線但從無流量
+撖行葫嚗璈?Windows 10嚗elease 撱箇蔭嚗ntel 獢?蝝?CPU嚗?
 
-因此正常情況下介面清單只會列出真正的實體／虛擬網路卡（如「乙太網路」「Wi-Fi」）。
-
-## 效能
-
-實測（本機 Windows 10，Release 建置，Intel 桌機級 CPU）：
-
-| 狀態 | CPU | 記憶體 |
+| ???| CPU | 閮擃?|
 |---|---|---|
-| 主視窗可見 | 約 1.7 - 8 %（取決於即時流量帶動的重繪頻率；低流量實測 1.7 - 1.9 %） | 約 65 - 75 MB |
-| 主視窗隱藏（僅系統匣） | 約 0.04 - 0.2 %（實測 0.12 %） | 約 67 MB |
+| 銝餉?蝒閬?| 蝝?1.7 - 8 %嚗?瘙箸?單?瘚?撣嗅???蝜芷??雿??祕皜?1.7 - 1.9 %嚗?| 蝝?65 - 75 MB |
+| 銝餉?蝒???頂蝯勗嚗?| 蝝?0.04 - 0.2 %嚗祕皜?0.12 %嚗?| 蝝?67 MB |
 
-主視窗可見時的 CPU 主要消耗在「數值變動 → 網格重繪」，因此與即時流量正相關：
-流量越高重繪越頻繁，CPU 越高；低流量時約 1.7 %，高流量持續重繪時最高約 8 %。
+銝餉?蝒閬???CPU 銝餉?瘨??潸?????蝬脫?鼓???迨????迤?賊?嚗?瘚?頞??鼓頞蝜?CPU 頞?嚗?瘚??? 1.7 %嚗?瘚????鼓??擃? 8 %??
+雿?皞??閮剛?嚗?
+- ?見??`GetIfTable2` P/Invoke嚗甈∠? 1 ms嚗颲?`NetworkInterface` API 敹怎? 47 ??
+- ?函?雿???瑁?蝺?璅??UI ??桐? 1 Hz 閮??冽???∟憚餈渲??舀陬
+- ?芰鼓蝬脫?芸**?詨潛?????*??蝜迎??蔭??瘨鼓??CPU嚗??GDI 蝑嚗蝑?- SQLite 瘥???甈∪?鈭斗?嚗AL嚗??∟??臬神?亙?撜?- tray ?內瘥?5 蝘?唬?甈∴???閬?
 
-低資源的關鍵設計：
+## 敺?憪Ⅳ撱箇蔭
 
-- 取樣用 `GetIfTable2` P/Invoke，單次約 1 ms（相较 `NetworkInterface` API 快約 47 倍）
-- 獨立低優先序執行緒取樣，UI 僅由單一 1 Hz 計時器推動，無輪迴訊息泵
-- 自繪網格只在**數值真的變動**時重繪，閒置時不消耗繪圖 CPU；共用 GDI 筆刷／畫筆
-- SQLite 每分鐘一次小交易（WAL），無背景寫入尖峰
-- tray 提示每 5 秒更新一次（僅懸停可見）
-
-## 從原始碼建置
-
-需要 [.NET SDK 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)；
-安裝檔另需 [Inno Setup 6](https://jrsoftware.org/isinfo.php)：
-
+?閬?[.NET SDK 10.0](https://dotnet.microsoft.com/download/dotnet/10.0)嚗?摰?瑼? [Inno Setup 6](https://jrsoftware.org/isinfo.php)嚗?
 ```bat
-build.bat                            :: 建置 Release（src\NetworkMonitor\bin\Release\...）
-publish-portable.bat [x64|x86]       :: 免安裝資料夾版（framework-dependent，約 46 MB，需 .NET Desktop Runtime）
-publish-selfcontained.bat [x64|x86]  :: 自含版資料夾（不需目標機安裝 .NET，約 163 MB）
-build-installer.bat                  :: 產生 x64 + x86 安裝檔 -> publish\installer\
+build.bat                            :: 撱箇蔭 Release嚗rc\NetworkMonitor\bin\Release\...嚗?publish-portable.bat [x64|x86]       :: ??鋆??冗??framework-dependent嚗? 46 MB嚗? .NET Desktop Runtime嚗?publish-selfcontained.bat [x64|x86]  :: ?芸???冗嚗???格?璈?鋆?.NET嚗? 163 MB嚗?build-installer.bat                  :: ?Ｙ? x64 + x86 摰?瑼?-> publish\installer\
 ```
 
-或用 Visual Studio 開啟 `NetworkMonitor.sln`，或直接執行：
-
+? Visual Studio ?? `NetworkMonitor.sln`嚗??湔?瑁?嚗?
 ```powershell
 dotnet run --project src\NetworkMonitor -c Release
 ```
 
-## 開發工具（tools\）
-
-| 檔案 | 用途 |
+## ?撌亙嚗ools\嚗?
+| 瑼? | ?券?|
 |---|---|
-| `make_icon.ps1` | 產生 `assets\app.ico`（7 種尺寸） |
-| `build.bat` / `publish-*.bat` / `build-installer.*` | 建置、發佈與安裝檔腳本（位於專案根目錄） |
-| `measure.ps1` | 量測各模式 CPU（`NM_NOPAINT` 診斷鉤子） |
-| `IfTableTest\` | `GetIfTable2` 與 `NetworkInterface` 正確性／效能對照工具 |
-| `ApiDump\` | Windows API 結構欄位 dump（開發期用） |
-| `ApiIntrospect\` | ScottPlot API 反射探索 |
-| `shot.ps1` `shoth.ps1` `shotpw.ps1` `opengraphics.ps1` | UI 截圖（`shotpw` 走 PrintWindow，不受視窗遮擋影響） |
-| `enumwin.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | 視窗列舉／按鈕點擊／元素 dump／核取方塊操作／下拉選項操作／座標查元素（測試用） |
-| `clickbtn.ps1` | 依索引點擊視窗內按鈕（跨語言，免傳中文字參數） |
-| `asciiart.ps1` `rawprof.ps1` `textink.ps1` `pixcheck.ps1` `measuretext.ps1` | 像素驗證：區域轉 ASCII／逐行墨跡剖析／按鈕文字位置／網格間距／TextRenderer 文字量測 |
-| `dumpstat.py` | 解析 `uidump.ps1` 輸出 |
-| `cleanup_db.py` | 清除資料庫中的重複介面紀錄 |
-| `dllcheck.py` | 檢查建置產物是否含指定字串（驗證 build 生效） |
+| `make_icon.ps1` | ?Ｙ? `assets\app.ico`嚗? 蝔桀偕撖賂? |
+| `build.bat` / `publish-*.bat` / `build-installer.*` | 撱箇蔭?雿?摰?瑼?穿?雿撠??寧?? |
+| `measure.ps1` | ?葫?芋撘?CPU嚗NM_NOPAINT` 閮箸?文?嚗?|
+| `IfTableTest\` | `GetIfTable2` ??`NetworkInterface` 甇?Ⅱ?改??撠撌亙 |
+| `ApiDump\` | Windows API 蝯?甈? dump嚗??潭??剁? |
+| `ApiIntrospect\` | ScottPlot API ???Ｙ揣 |
+| `shot.ps1` `shoth.ps1` `shotpw.ps1` `opengraphics.ps1` | UI ?芸?嚗shotpw` 韏?PrintWindow嚗???蝒?蔣?選? |
+| `enumwin.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | 閬???嚗??????? dump嚗?憛?雿?銝??賊???嚗漣璅??嚗葫閰衣嚗?|
+| `clickbtn.ps1` | 靘揣撘???蝒??嚗楊隤?嚗??喃葉???嚗?|
+| `asciiart.ps1` `rawprof.ps1` `textink.ps1` `pixcheck.ps1` `measuretext.ps1` | ??撽?嚗??? ASCII嚗?憓刻楚??嚗???摮?蝵殷?蝬脫??嚗extRenderer ???葫 |
+| `dumpstat.py` | 閫?? `uidump.ps1` 頛詨 |
+| `cleanup_db.py` | 皜鞈?摨思葉??銴??Ｙ???|
+| `dllcheck.py` | 瑼Ｘ撱箇蔭?Ｙ?臬?急?摰?銝莎?撽? build ??嚗?|
 
-環境變數診斷鉤子（一般使用請勿設定）：
+?啣?霈閮箸?文?嚗??砌蝙?刻??輯身摰?嚗?
+- `NM_NOPAINT=1`嚗歲??1 Hz ?鼓嚗? `grid` / `summary` / `tray`嚗?刻歲????蝜芯?皞?嚗?潮??Ｙ鼓???砍????
+- `NM_STATS="chart=bar period=week offset=-1"` ??蝯梯?閬??????”嚗望?嚗??詨?蝘鳴??冽??孵??恍???`chart`: `line`|`bar`嚗period`: `day`|`week`|`month`嚗offset`: ?湔嚗? ?箸??1 ?箔?銝??
 
-- `NM_NOPAINT=1`（跳過 1 Hz 重繪）或 `grid` / `summary` / `tray`（單獨跳過某個重繪來源），用於隔離繪圖成本做效能分析
-- `NM_STATS="chart=bar period=week offset=-1"` 指定統計視窗開啟時的圖表／週期／期數偏移，用於重現特定畫面狀態（`chart`: `line`|`bar`；`period`: `day`|`week`|`month`；`offset`: 整數，0 為本期、-1 為上一期）
+## ??圾
 
-## 疑難排解
+- **蝔?瘝????**嚗??`%LOCALAPPDATA%\NetworkMonitor\crash.log`
+- **隞皜瘝???隞**嚗閮剖? ????閮剖?嚗????急??????Ｕ????怠??祟?訾??Ｕ?- **?詨??極雿恣?銝?**嚗極雿恣?憿舐內?瘥?摨?瘚?嚗蝔?憿舐內?**瘥雯頝臭???*?蜇瘚?嚗??急???撘?
+- **??蝟餌絞敺?鞈?**嚗?? `%LOCALAPPDATA%\NetworkMonitor\`嚗???荔?蝔???蝥?- **??撘?折?閬頂蝯梁恣?甈???*嚗TW ?詨?蝬脰楝????閬?甈????Ｖ???  ?誑蝞∠??∟澈???啣????誑蝞∠??∪銵敺?甈?蝔???蝡??
+- **蝔?銵＊蝷箝?典銵?????*嚗府銵?撘???銵?甇瑕鞈????亦敞閮?甇?虜憿舐內嚗?- **撽? ETW ?臬?舐**嚗誑蝞∠??∪銵?`NetworkMonitor.exe --etw-selftest` 敺??  `%LOCALAPPDATA%\NetworkMonitor\etw_selftest.txt`
 
-- **程式沒啟動／閃退**：查看 `%LOCALAPPDATA%\NetworkMonitor\crash.log`
-- **介面清單沒有我的介面**：到設定 → 監控設定，開啟「包含未連線的介面」或「包含封包篩選介面」
-- **數字與工作管理員不同**：工作管理員顯示的是每個程序的流量，本程式顯示的是**每個網路介面**的總流量（包含所有程式）
-- **重灌系統後舊資料**：資料在 `%LOCALAPPDATA%\NetworkMonitor\`，保留即可，程式會自動接續
-- **「程式監控需要系統管理員權限」**：ETW 核心網路提供者需要提權；按介面上的
-  「以管理員身分重新啟動」，或以管理員執行捷徑。提權後程序監控立即生效
-- **程序行顯示「未在執行」但有紀錄**：該行程式目前沒有執行（歷史資料與今日累計仍正常顯示）
-- **驗證 ETW 是否可用**：以管理員執行 `NetworkMonitor.exe --etw-selftest` 後查看
-  `%LOCALAPPDATA%\NetworkMonitor\etw_selftest.txt`
+## ?銵ㄖ
 
-## 技術棧
-
-- C# / .NET 10 WinForms（`net10.0-windows10.0.19041`，僅限 Windows 桌面，x64/x86）
-- [ScottPlot 5.1.59](https://scottplot.net/) 統計圖表
+- C# / .NET 10 WinForms嚗net10.0-windows10.0.19041`嚗???Windows 獢嚗64/x86嚗?- [ScottPlot 5.1.59](https://scottplot.net/) 蝯梯??”
 - [Microsoft.Data.Sqlite 10.0.12](https://learn.microsoft.com/ef/core/providers/sqlite/) + SQLite WAL
-- Windows `GetIfTable2`（iphlpapi）P/Invoke 取樣
-- [TraceEvent 3.2.8](https://github.com/microsoft/perfview) 消費 `Microsoft-Windows-Kernel-Network` ETW（v1.1 程序監控）
+- Windows `GetIfTable2`嚗phlpapi嚗/Invoke ?見
+- [TraceEvent 3.2.8](https://github.com/microsoft/perfview) 瘨祥 `Microsoft-Windows-Kernel-Network` ETW嚗1.1 蝔???嚗?
+## ??
 
-## 授權
-
-[MIT](LICENSE) © 2026 Caron Yang
+[MIT](LICENSE) 穢 2026 Caron Yang
