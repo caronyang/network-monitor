@@ -44,6 +44,9 @@ public sealed class AppSettings
     [JsonPropertyName("showFilterAdapters")]
     public bool ShowFilterAdapters { get; set; }
 
+    [JsonPropertyName("processMonitors")]
+    public List<string> ProcessMonitors { get; set; } = new();
+
     [JsonPropertyName("panelX")]
     public int? PanelX { get; set; }
 
@@ -87,8 +90,23 @@ public sealed class AppSettings
         Language = Language is "zh" or "en" ? Language : "en";
         SampleIntervalMs = Math.Clamp(SampleIntervalMs, 200, 60_000);
         RetentionDays = Math.Clamp(RetentionDays, 1, 3650);
+
+        // process monitor list: canonical lowercase base names, deduped, hard cap of 5
+        ProcessMonitors ??= new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var clean = new List<string>(Math.Min(5, ProcessMonitors.Count + 1));
+        foreach (var raw in ProcessMonitors)
+        {
+            var name = Path.GetFileNameWithoutExtension((raw ?? "").Trim()).ToLowerInvariant();
+            if (name.Length == 0 || !seen.Add(name)) continue;
+            clean.Add(name);
+            if (clean.Count >= MaxProcessMonitors) break;
+        }
+        ProcessMonitors = clean;
         return this;
     }
+
+    public const int MaxProcessMonitors = 5;
 
     public void Save()
     {

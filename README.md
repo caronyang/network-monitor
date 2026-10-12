@@ -25,6 +25,8 @@ switchable at runtime.
 | Startup | One-click "run at logon" via the `HKCU\...\Run` registry value |
 | Languages | English / 繁體中文 switch instantly from the tray menu or Settings, no restart needed |
 | Low resource | See the [Performance](#performance) section |
+| **Process monitoring** (v1.1) | Per-second byte counts **for chosen applications** (e.g. chrome.exe): a process list in the main window (status, live rates, today/session totals), up to 5 processes. Data is stored in the same SQLite tables under `P:<name>` keys (one row per minute) and the statistics "Interface" dropdown lists each process directly. **Needs admin rights** (ETW `Microsoft-Windows-Kernel-Network`, exact TCP+UDP/IPv4+IPv6 counting); without elevation everything else keeps working and the UI shows a hint |
+| **Traffic stopwatch** (v1.1) | Toolbar `⏱ Start` / `⏹ Stop`: accumulates total down/up traffic between the two clicks and writes the result to SQLite; the statistics window lists all records (start / end / duration / download / upload) with the same retention |
 
 ## Screenshots
 
@@ -41,12 +43,14 @@ switchable at runtime.
 - Windows 10 (build 19041 or later) or Windows 11, **x64 (recommended) or x86**
 - **Installer / self-contained build**: nothing else to install
 - **Portable build**: .NET 10 Desktop Runtime ([download](https://dotnet.microsoft.com/download/dotnet/10.0))
+- **Process monitoring (v1.1)**: administrator rights (ETW); without elevation all other
+  features keep working and the UI shows a hint with a "restart as administrator" button
 
 ## Installation
 
 ### Installer (recommended)
 
-1. Download `NetworkMonitor-1.0.0-x64-setup.exe` from the
+1. Download `NetworkMonitor-1.1.0-x64-setup.exe` from the
    [Releases](https://github.com/caronyang/network-monitor/releases) page
    (use `-x86-setup.exe` for 32-bit systems)
 2. Run it. The installer offers:
@@ -59,7 +63,7 @@ switchable at runtime.
 
 ### Portable
 
-Download `NetworkMonitor-1.0.0-portable-x64.zip` from the
+Download `NetworkMonitor-1.1.0-portable-x64.zip` from the
 [Releases](https://github.com/caronyang/network-monitor/releases) page, extract it and
 run `NetworkMonitor.exe` (requires the .NET 10 Desktop Runtime).
 
@@ -71,10 +75,16 @@ output folder. Both scripts accept `x64` or `x86` as an argument (default `x64`)
 
 ### Main window
 
-- **Toolbar**: `Statistics` opens the charts, `Settings` opens preferences.
-  Switch language from the tray menu or Settings; minimize with the native window buttons.
+- **Toolbar**: `Statistics` opens the charts, `Settings` opens preferences,
+  `⏱ Start` / `⏹ Stop` run the **traffic stopwatch**.
 - **Dark summary bar**: total live rate, **Today** (daily total, refreshed from the
   database every 45 s) and **Session** (since app start).
+- **Process ops row** (v1.1): `Monitored processes (n/5)` + `Add…` (lists running
+  processes to add); when not elevated it shows a red hint and a
+  "Restart as administrator" button.
+- **Process grid** (v1.1, shown while ≥1 process is monitored): one row per process
+  (`chrome.exe`…), running state, live download/upload with bars, today and session
+  totals. The **×** at each row's edge (or the row's context menu) removes it.
 - **Interface grid**: each row shows the interface name, link status and link speed,
   live download/upload rates with relative progress bars, and today/session totals.
 
@@ -89,15 +99,20 @@ output folder. Both scripts accept `x64` or `x86` as an argument (default `x64`)
 
 - Chart type: `Line` or `Bar`
 - Period: `Day` (by hour 00–23), `Week` (by day), `Month` (by day, 30 days)
-- Interface: all interfaces or a single one
+- Source: all interfaces / a single interface / **a single monitored process** (v1.1, e.g. `chrome.exe (process)`)
 - `<` `>` switch to the previous/next period; `F5` / `←` `→` work too
 - `Export CSV` exports the visible range
+- **Traffic measurements** (v1.1, bottom of the window): every stopwatch record with
+  start time, end time, duration, total download, total upload
 
 ### Floating panel
 
 A semi-transparent topmost mini panel showing live download/upload rates,
-**today's totals** and a 90-second sparkline. Drag to move, double-click to open the
-main window, right-click for a menu, `×` or the menu item to close. Position is remembered.
+**today's totals** and a 90-second sparkline. Base size is unchanged from v1.0
+(244×118); while processes are monitored, one block per process is **stacked under
+the sparkline** (name, live ↓↑, today's totals — up to 5) and the panel grows to fit.
+Drag to move, double-click to open the main window, right-click for a menu,
+`×` or the menu item to close. Position is remembered.
 
 ![Floating panel](screenshots/panel.png)
 
@@ -105,9 +120,10 @@ main window, right-click for a menu, `×` or the menu item to close. Position is
 
 ```
 %LOCALAPPDATA%\NetworkMonitor\
-  networkmonitor.db     SQLite database (WAL)
-  settings.json         settings
+  networkmonitor.db     SQLite database (WAL) - traffic (interfaces + P: processes), measurement
+  settings.json         settings (processMonitors monitored-process list, max 5)
   crash.log             error log
+  etw_selftest.txt      ETW self-test output (produced by --etw-selftest)
 ```
 
 `settings.json` main fields:
@@ -122,6 +138,7 @@ main window, right-click for a menu, `×` or the menu item to close. Position is
 | `includeLoopback` | include 127.0.0.1 | `false` |
 | `includeDisconnected` | include disconnected interfaces | `false` |
 | `showFilterAdapters` | show packet-filter interfaces | `false` |
+| `processMonitors` | monitored processes (lowercase, no `.exe`, max 5) | `[]` |
 
 ### About interface filtering (important)
 
@@ -154,13 +171,14 @@ low traffic, up to about 8 % under sustained high traffic.
 
 Key design points for low resource usage:
 
-- Sampling uses `GetIfTable2` P/Invoke (~1 ms per call, ~47× faster than the
-  `NetworkInterface` API)
-- Sampling runs on a dedicated low-priority thread; the UI is driven by a single 1 Hz
-  timer with no message-pump busy loop
+- Sampling uses `GetIfTable2` P/Invoke (~1 ms per call, ~47× faster than the `NetworkInterface` API)
+- Sampling runs on a dedicated low-priority thread; the UI is driven by a single 1 Hz timer with no message-pump busy loop
 - The custom-drawn grid only repaints when **values actually change**; brushes/pens are cached
 - SQLite commits one small transaction per minute (WAL) — no background write spikes
 - Tray tooltip updates every 5 s (only visible while hovered)
+- Process monitoring (v1.1) consumes ETW packet events on a dedicated thread and only
+  does Interlocked adds per event; when no processes are monitored the ETW session is
+  not started at all
 
 ## Building from source
 
@@ -215,6 +233,13 @@ Diagnostic environment variables (do not set for normal use):
   shows total traffic **per network interface** (all processes)
 - **Keeps old data after reinstalling Windows**: data lives in
   `%LOCALAPPDATA%\NetworkMonitor\` — keep the folder and the app will continue where it left off
+- **"Process monitoring requires administrator rights"**: the ETW kernel-network provider
+  needs elevation; click "Restart as administrator" on the hint bar or start the shortcut
+  as administrator. Monitoring activates immediately after the restart.
+- **A process row says "Not running" but has data**: that app is not currently running
+  (history and today's totals are still shown)
+- **Verify ETW availability**: run `NetworkMonitor.exe --etw-selftest` as administrator,
+  then check `%LOCALAPPDATA%\NetworkMonitor\etw_selftest.txt`
 
 ## Tech stack
 
@@ -222,7 +247,10 @@ Diagnostic environment variables (do not set for normal use):
 - [ScottPlot 5.1.59](https://scottplot.net/) charts
 - [Microsoft.Data.Sqlite 10.0.12](https://learn.microsoft.com/ef/core/providers/sqlite/) + SQLite WAL
 - Windows `GetIfTable2` (iphlpapi) P/Invoke sampling
+- [TraceEvent 3.2.8](https://github.com/microsoft/perfview) consuming the
+  `Microsoft-Windows-Kernel-Network` ETW provider (v1.1 process monitoring)
 
 ## License
 
 [MIT](LICENSE) © 2026 Caron Yang
+

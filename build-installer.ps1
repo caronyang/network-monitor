@@ -14,7 +14,7 @@
     publish\installer\NetworkMonitor-<ver>-x86-setup.exe
 #>
 param(
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.1.0",
     [ValidateSet("x64", "x86", "both")]
     [string]$Arch = "both",
     [switch]$SkipPublish

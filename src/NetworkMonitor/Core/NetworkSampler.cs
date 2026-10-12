@@ -18,17 +18,31 @@ public sealed class IfaceInfo
     public NetworkInterfaceType Type { get; init; }
 }
 
+public sealed class ProcInfo
+{
+    public required string Name { get; init; }        // canonical lowercase base name
+    public required string Key { get; init; }         // traffic-table key ("P:name")
+    public long RxRate { get; init; }
+    public long TxRate { get; init; }
+    public long SessionRx { get; init; }
+    public long SessionTx { get; init; }
+    public bool Running { get; init; }
+}
+
 public sealed class Snapshot
 {
     public static readonly Snapshot Empty = new()
     {
         Time = DateTime.MinValue,
         Items = Array.Empty<IfaceInfo>(),
+        Processes = Array.Empty<ProcInfo>(),
         Valid = false,
     };
 
     public DateTime Time { get; init; }
     public IReadOnlyList<IfaceInfo> Items { get; init; } = Array.Empty<IfaceInfo>();
+    public IReadOnlyList<ProcInfo> Processes { get; init; } = Array.Empty<ProcInfo>();
+    public ProcessMonitorState ProcState { get; init; } = ProcessMonitorState.Stopped;
     public long DownRate { get; init; }
     public long UpRate { get; init; }
     public bool Valid { get; init; }
@@ -56,6 +70,16 @@ public sealed class NetworkSampler : IDisposable
     private readonly Dictionary<string, long> _sessionRx = new(StringComparer.Ordinal);
     private readonly Dictionary<string, long> _sessionTx = new(StringComparer.Ordinal);
 
+    // per monitored process: ETW cumulative baseline + session totals (keyed by canonical name)
+    private readonly Dictionary<string, (long Rx, long Tx)> _procBase = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, (long Rx, long Tx)> _procSession = new(StringComparer.OrdinalIgnoreCase);
+
+    // traffic stopwatch ("碼表")
+    private volatile bool _measActive;
+    private DateTime _measStart;
+    private long _measRx;
+    private long _measTx;
+
     // (interface id, local minute timestamp) -> accumulated deltas
     private readonly Dictionary<(string, long), TrafficRow> _pending = new();
     private long _bucketTs;
@@ -75,6 +99,9 @@ public sealed class NetworkSampler : IDisposable
     public Snapshot Latest => Volatile.Read(ref _latest);
 
     public long SampleCount => Interlocked.Read(ref _samples);
+
+    /// <summary>ETW per-process byte source. Assigned once at startup; may be null on failure paths.</summary>
+    public ProcessTrafficMonitor? Processes { get; set; }
 
     public void Start()
     {
@@ -228,19 +255,114 @@ public sealed class NetworkSampler : IDisposable
                 Loopback = loopback,
                 Type = (NetworkInterfaceType)row.Type,
             });
+
+            if (_measActive)
+            {
+                Interlocked.Add(ref _measRx, dRx);
+                Interlocked.Add(ref _measTx, dTx);
+            }
         }
 
         items.Sort(CompareInterfaces);
+
+        var procs = SampleProcesses(elapsedSec, bucketTs, dayKey, hour);
 
         Interlocked.Increment(ref _samples);
         Volatile.Write(ref _latest, new Snapshot
         {
             Time = now,
             Items = items,
+            Processes = procs,
+            ProcState = Processes?.State ?? ProcessMonitorState.Stopped,
             DownRate = downTotal,
             UpRate = upTotal,
             Valid = true,
         });
+    }
+
+    /// <summary>
+    /// Reads the ETW per-process counters, converts them to rates and minute buckets, and
+    /// keeps one <see cref="ProcInfo"/> per monitored process. Rows are produced even when
+    /// the monitor cannot run (no elevation) so the UI still lists the selected processes.
+    /// </summary>
+    private IReadOnlyList<ProcInfo> SampleProcesses(double elapsedSec, long bucketTs, int dayKey, int hour)
+    {
+        var names = _settings.ProcessMonitors;
+        if (names.Count == 0)
+        {
+            if (Processes is { State: ProcessMonitorState.Running }) Processes.Stop();
+            _procBase.Clear();
+            _procSession.Clear();
+            return Array.Empty<ProcInfo>();
+        }
+
+        Processes?.EnsureRunning();
+        bool etw = Processes?.State == ProcessMonitorState.Running;
+        if (etw) Processes!.TrimCaches();
+
+        // forget processes that were removed from the monitor list
+        if (_procBase.Count > 0)
+        {
+            List<string>? stale = null;
+            foreach (var key in _procBase.Keys)
+                if (!names.Contains(key)) (stale ??= new List<string>()).Add(key);
+            if (stale is not null)
+                foreach (var key in stale) { _procBase.Remove(key); _procSession.Remove(key); }
+        }
+
+        var list = new List<ProcInfo>(names.Count);
+        foreach (var name in names)
+        {
+            long dRx = 0, dTx = 0;
+            if (etw)
+            {
+                var (rx, tx) = Processes!.CumulativeFor(name);
+                if (_procBase.TryGetValue(name, out var b))
+                {
+                    dRx = Math.Max(0, rx - b.Rx);
+                    dTx = Math.Max(0, tx - b.Tx);
+                }
+
+                _procBase[name] = (rx, tx);
+            }
+            else
+            {
+                // baseline restarts the moment a session comes up
+                _procBase.Remove(name);
+            }
+
+            var sess = _procSession.GetValueOrDefault(name);
+            sess.Rx += dRx;
+            sess.Tx += dTx;
+            _procSession[name] = sess;
+
+            if (dRx > 0 || dTx > 0)
+            {
+                string key = TrafficKeys.ForProcess(name);
+                var bucketKey = (key, bucketTs);
+                if (_pending.TryGetValue(bucketKey, out var pending))
+                    _pending[bucketKey] = pending with { Rx = pending.Rx + dRx, Tx = pending.Tx + dTx };
+                else
+                    _pending[bucketKey] = new TrafficRow(key, bucketTs, dayKey, hour, dRx, dTx);
+            }
+
+            bool alive;
+            try { alive = Process.GetProcessesByName(name).Length > 0; }
+            catch { alive = false; }
+
+            list.Add(new ProcInfo
+            {
+                Name = name,
+                Key = TrafficKeys.ForProcess(name),
+                RxRate = elapsedSec > 0 ? (long)Math.Round(dRx / elapsedSec) : 0,
+                TxRate = elapsedSec > 0 ? (long)Math.Round(dTx / elapsedSec) : 0,
+                SessionRx = sess.Rx,
+                SessionTx = sess.Tx,
+                Running = alive,
+            });
+        }
+
+        return list;
     }
 
     private static int CompareInterfaces(IfaceInfo a, IfaceInfo b)
@@ -297,6 +419,55 @@ public sealed class NetworkSampler : IDisposable
 
     /// <summary>Drops the rate baselines on the next tick (call after a filter setting changed).</summary>
     public void ResetBaseline() => _resetBaseline = true;
+
+    // ---------------------------------------------------------- traffic stopwatch
+
+    /// <summary>Raised on the sampler thread after a measurement has been persisted.</summary>
+    public event Action? MeasurementCompleted;
+
+    public bool Measuring => _measActive;
+
+    /// <summary>Local start time of the running measurement (DateTime.MinValue when idle).</summary>
+    public DateTime MeasurementStart => _measStart;
+
+    public long MeasurementRx => Volatile.Read(ref _measRx);
+
+    public long MeasurementTx => Volatile.Read(ref _measTx);
+
+    /// <summary>Starts accumulating total traffic (the "碼表"). No-op while already running.</summary>
+    public void StartMeasurement()
+    {
+        if (_measActive) return;
+        Interlocked.Exchange(ref _measRx, 0);
+        Interlocked.Exchange(ref _measTx, 0);
+        _measStart = DateTime.Now;
+        _measActive = true;
+    }
+
+    /// <summary>Stops the measurement and records it to the database.</summary>
+    public void StopMeasurement()
+    {
+        if (!_measActive) return;
+        _measActive = false;
+        var start = _measStart;
+        var end = DateTime.Now;
+        long rx = Interlocked.Read(ref _measRx);
+        long tx = Interlocked.Read(ref _measTx);
+
+        try
+        {
+            _db.WriteMeasurement(new Measurement(
+                new DateTimeOffset(start).ToUnixTimeSeconds(),
+                new DateTimeOffset(end).ToUnixTimeSeconds(),
+                rx, tx));
+        }
+        catch
+        {
+            // a db error must not lose the state reset; the record is simply dropped
+        }
+
+        try { MeasurementCompleted?.Invoke(); } catch { /* handler errors are not ours */ }
+    }
 
     /// <summary>
     /// True for names Windows invents for adapters that do not have one, currently the

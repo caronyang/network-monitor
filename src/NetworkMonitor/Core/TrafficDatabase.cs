@@ -8,6 +8,9 @@ public readonly record struct TrafficRow(string Iface, long Ts, int Day, int Hou
 /// <summary>Aggregated chart point; <see cref="Key"/> is an hour (0-23) or a yyyyMMdd day key.</summary>
 public readonly record struct Bucket(int Key, long Rx, long Tx);
 
+/// <summary>One traffic-stopwatch record: totals between two local timestamps (unix seconds).</summary>
+public readonly record struct Measurement(long StartUnix, long EndUnix, long Rx, long Tx);
+
 public readonly record struct DayTotal(long Rx, long Tx);
 
 /// <summary>
@@ -82,11 +85,20 @@ public sealed class TrafficDatabase : IDisposable
                 PRIMARY KEY (iface, ts)
             ) WITHOUT ROWID;
             CREATE INDEX IF NOT EXISTS ix_traffic_day ON traffic(day);
+            CREATE TABLE IF NOT EXISTS measurement (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                start_ts INTEGER NOT NULL,
+                end_ts   INTEGER NOT NULL,
+                rx       INTEGER NOT NULL DEFAULT 0,
+                tx       INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS ix_measurement_start ON measurement(start_ts);
             CREATE TABLE IF NOT EXISTS meta (
                 k TEXT PRIMARY KEY,
                 v TEXT NOT NULL
             );
             INSERT OR IGNORE INTO meta(k, v) VALUES ('schema_version', '1');
+            INSERT OR REPLACE INTO meta(k, v) VALUES ('schema_version', '2');
             """;
         cmd.ExecuteNonQuery();
     }
@@ -159,14 +171,86 @@ public sealed class TrafficDatabase : IDisposable
     {
         if (_disposed) return 0;
         var cutoff = DateUtil.DayKey(DateTime.Today.AddDays(-Math.Max(1, retentionDays)));
+        long cutoffUnix = new DateTimeOffset(DateUtil.FromDayKey(cutoff)).ToUnixTimeSeconds();
+        lock (_writeGate)
+        {
+            var conn = OpenWrite();
+            int deleted;
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "DELETE FROM traffic WHERE day < $c;";
+                cmd.Parameters.AddWithValue("$c", cutoff);
+                deleted = cmd.ExecuteNonQuery();
+            }
+
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "DELETE FROM measurement WHERE end_ts < $c;";
+                cmd.Parameters.AddWithValue("$c", cutoffUnix);
+                cmd.ExecuteNonQuery();
+            }
+
+            return deleted;
+        }
+    }
+
+    /// <summary>Appends one traffic-stopwatch record.</summary>
+    public void WriteMeasurement(Measurement m)
+    {
+        if (_disposed) return;
         lock (_writeGate)
         {
             var conn = OpenWrite();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM traffic WHERE day < $c;";
-            cmd.Parameters.AddWithValue("$c", cutoff);
-            return cmd.ExecuteNonQuery();
+            cmd.CommandText = "INSERT INTO measurement(start_ts, end_ts, rx, tx) VALUES ($a, $b, $r, $t);";
+            cmd.Parameters.AddWithValue("$a", m.StartUnix);
+            cmd.Parameters.AddWithValue("$b", m.EndUnix);
+            cmd.Parameters.AddWithValue("$r", m.Rx);
+            cmd.Parameters.AddWithValue("$t", m.Tx);
+            cmd.ExecuteNonQuery();
         }
+    }
+
+    /// <summary>Newest stopwatch records first.</summary>
+    public List<Measurement> QueryMeasurements(int limit = 200)
+    {
+        var list = new List<Measurement>();
+        try
+        {
+            using var conn = OpenRead();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT start_ts, end_ts, rx, tx FROM measurement ORDER BY start_ts DESC LIMIT $n;";
+            cmd.Parameters.AddWithValue("$n", limit);
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+                list.Add(new Measurement(reader.GetInt64(0), reader.GetInt64(1), reader.GetInt64(2), reader.GetInt64(3)));
+        }
+        catch
+        {
+            // unreadable database -> empty list
+        }
+
+        return list;
+    }
+
+    /// <summary>All process keys that have recorded data (newest day first).</summary>
+    public List<string> ProcessKeys()
+    {
+        var list = new List<string>();
+        try
+        {
+            using var conn = OpenRead();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT DISTINCT iface FROM traffic WHERE iface LIKE 'P:%' ORDER BY iface;";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read()) list.Add(reader.GetString(0));
+        }
+        catch
+        {
+            // ignore
+        }
+
+        return list;
     }
 
     public long Count()
@@ -190,7 +274,7 @@ public sealed class TrafficDatabase : IDisposable
         {
             var conn = OpenWrite();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM traffic;";
+            cmd.CommandText = "DELETE FROM traffic; DELETE FROM measurement;";
             cmd.ExecuteNonQuery();
             Pragma(conn, "PRAGMA wal_checkpoint(TRUNCATE);");
         }
@@ -205,7 +289,7 @@ public sealed class TrafficDatabase : IDisposable
             using var conn = OpenRead();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = iface is null
-                ? "SELECT hr, SUM(rx), SUM(tx) FROM traffic WHERE day = $d GROUP BY hr ORDER BY hr;"
+                ? "SELECT hr, SUM(rx), SUM(tx) FROM traffic WHERE day = $d AND iface NOT LIKE 'P:%' GROUP BY hr ORDER BY hr;"
                 : "SELECT hr, SUM(rx), SUM(tx) FROM traffic WHERE day = $d AND iface = $i GROUP BY hr ORDER BY hr;";
             cmd.Parameters.AddWithValue("$d", dayKey);
             if (iface is not null) cmd.Parameters.AddWithValue("$i", iface);
@@ -233,7 +317,7 @@ public sealed class TrafficDatabase : IDisposable
             using var conn = OpenRead();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = iface is null
-                ? "SELECT day, SUM(rx), SUM(tx) FROM traffic WHERE day >= $a AND day <= $b GROUP BY day ORDER BY day;"
+                ? "SELECT day, SUM(rx), SUM(tx) FROM traffic WHERE day >= $a AND day <= $b AND iface NOT LIKE 'P:%' GROUP BY day ORDER BY day;"
                 : "SELECT day, SUM(rx), SUM(tx) FROM traffic WHERE day >= $a AND day <= $b AND iface = $i GROUP BY day ORDER BY day;";
             cmd.Parameters.AddWithValue("$a", fromDayKey);
             cmd.Parameters.AddWithValue("$b", toDayKey);
@@ -283,7 +367,7 @@ public sealed class TrafficDatabase : IDisposable
             using var conn = OpenRead();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = iface is null
-                ? "SELECT COALESCE(SUM(rx),0), COALESCE(SUM(tx),0) FROM traffic WHERE day = $d;"
+                ? "SELECT COALESCE(SUM(rx),0), COALESCE(SUM(tx),0) FROM traffic WHERE day = $d AND iface NOT LIKE 'P:%';"
                 : "SELECT COALESCE(SUM(rx),0), COALESCE(SUM(tx),0) FROM traffic WHERE day = $d AND iface = $i;";
             cmd.Parameters.AddWithValue("$d", dayKey);
             if (iface is not null) cmd.Parameters.AddWithValue("$i", iface);

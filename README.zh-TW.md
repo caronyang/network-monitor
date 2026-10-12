@@ -24,6 +24,8 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 | 開機啟動 | 一鍵寫入 `HKCU\...\Run` 登錄項 |
 | 中英文 | tray 選單或設定視窗即時切換，無需重啟 |
 | 低資源 | 見下方[效能](#效能) |
+| **程序監控**（v1.1） | 每秒統計**特定程式**（如 chrome.exe）的上下載：主視窗程序列表（狀態／即時速率／今日／本次累計）、最多同時 5 個。資料以 `P:程式名` 鍵寫入同一 SQLite 量表（每分鐘一筆），統計圖表介面下拉可直接選程式繪圖。**需以系統管理員執行**（ETW `Microsoft-Windows-Kernel-Network`，TCP+UDP/IPv4+IPv6 全量精確）；未授權時程式正常運行，只在介面提示 |
+| **碼表統計**（v1.1） | 主視窗「⏱ 開始統計／⏹ 停止統計」：累計一段時間的下載／上傳總量，結束時寫入 SQLite，統計視窗下方列出所有紀錄（開始／結束／時間／下載／上傳），保留期間同 `retentionDays` |
 
 ## 畫面截圖
 
@@ -40,13 +42,14 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 - Windows 10（19041 以上）或 Windows 11，**x64（建議）或 x86**
 - **安裝版／自含版**：無需安裝任何元件
 - **portable 版**：需已安裝 .NET 10 Desktop Runtime（[下載](https://dotnet.microsoft.com/download/dotnet/10.0)）
+- **程序監控（v1.1）**：需要**系統管理員**執行（ETW）；未提權時其餘功能正常，程式會在介面提示並提供「以管理員身分重新啟動」
 
 ## 安裝方式
 
 ### 安裝程式（建議）
 
 1. 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-   `NetworkMonitor-1.0.0-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
+   `NetworkMonitor-1.1.0-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
 2. 執行安裝，安裝過程可勾選：
    - 開始功能表捷徑（固定建立）、桌面捷徑（選用）
    - **開機時自動啟動**（寫入與程式內開機啟動開關相同的登錄值）
@@ -57,7 +60,7 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 ### 免安裝版（portable）
 
 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-`NetworkMonitor-1.0.0-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
+`NetworkMonitor-1.1.0-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
 （需 .NET 10 Desktop Runtime）。
 
 或自行執行 `publish-portable.bat`（framework-dependent）／`publish-selfcontained.bat`
@@ -68,10 +71,14 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 
 ### 主視窗
 
-- **工具列按鈕**：`Statistics` 開統計圖表、`Settings` 開設定；
+- **工具列按鈕**：`統計圖表` 開統計圖表、`設定` 開設定、`⏱ 開始統計`／`⏹ 停止統計` 為**碼表**；
   語言請用 tray 選單或設定視窗切換，最小化用視窗原生控制項
 - **深色摘要列**：Total 即時總速率、Today（今日累計，每 45 秒從資料庫更新）、
   Session（本次啟動累計）
+- **程式操作列**（v1.1）：`監控程式 (n/5)` + `新增…`（列出執行中程式，點選加入監控清單）；
+  未以管理員執行時顯示紅色提示與「以管理員身分重新啟動」按鈕
+- **程式網格**（v1.1，監控 ≥1 個程式時出現）：每列顯示程式名（如 `chrome.exe`）、執行狀態、
+  即時下載／上傳速率與相對進度條、今日與本次累計；點列尾 **×** 或右鍵選單可移出監控
 - **介面網格**：每列顯示介面名稱、連線狀態與連線速率、即時下載／上傳速率與相對進度條、
   今日與本次統計
 
@@ -83,15 +90,19 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 
 ### 統計面板
 
-- 圖表：`Line` 折線圖、`Bar` 直條圖
-- 期間：`Day` 日（分時 00-23）、`Week` 週（分日）、`Month` 月（分日 30 天）
-- 介面：全部介面或單一介面
+- 圖表：`折線圖`、`直條圖`
+- 期間：`日`（分時 00-23）、`週`（分日）、`月`（分日 30 天）
+- 來源：`全部介面`／單一介面／**單一監控程式**（v1.1，如 `chrome.exe (程式)`）
 - `<` `>` 切換上一期／下一期，`F5`／`←`→ 鍵也可操作
-- `Export CSV` 匯出目前區間資料
+- `匯出 CSV` 匯出目前區間資料
+- **即時統計紀錄**（v1.1，視窗下方）：列出每次碼表統計的
+  開始時間、結束時間、時間長、總下載、總上傳
 
 ### 浮動面板
 
 半透明置頂小面板，顯示即時下載／上傳速率、**今日累積傳輸量**與 90 秒走勢。
+基礎大小與 v1.0 相同（244×118）；當有監控程式時，走勢下方**疊加每個程式的區塊**
+（名稱、即時 ↓↑、今日累計，最多 5 個），面板自動增高。
 拖曳移動、雙擊開主視窗、右鍵選單、`×` 或選單關閉。位置會記憶。
 
 ![浮動面板](screenshots/panel.png)
@@ -100,9 +111,10 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 
 ```
 %LOCALAPPDATA%\NetworkMonitor\
-  networkmonitor.db                        SQLite（WAL）
-  settings.json                             設定
+  networkmonitor.db                        SQLite（WAL；traffic 介面+P:程式、measurement 碼表）
+  settings.json                             設定（含 processMonitors 監控程式清單，最多 5）
   crash.log                                 異常記錄
+  etw_selftest.txt                          ETW 自測輸出（--etw-selftest 產生）
 ```
 
 `settings.json` 主要欄位：
@@ -117,6 +129,7 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 | `includeLoopback` | 包含 127.0.0.1 | `false` |
 | `includeDisconnected` | 包含未連線介面 | `false` |
 | `showFilterAdapters` | 顯示封包篩選介面 | `false` |
+| `processMonitors` | 程式監控清單（小寫不含 `.exe`，最多 5 個） | `[]` |
 
 ### 關於介面篩選（重要）
 
@@ -198,6 +211,11 @@ dotnet run --project src\NetworkMonitor -c Release
 - **介面清單沒有我的介面**：到設定 → 監控設定，開啟「包含未連線的介面」或「包含封包篩選介面」
 - **數字與工作管理員不同**：工作管理員顯示的是每個程序的流量，本程式顯示的是**每個網路介面**的總流量（包含所有程式）
 - **重灌系統後舊資料**：資料在 `%LOCALAPPDATA%\NetworkMonitor\`，保留即可，程式會自動接續
+- **「程式監控需要系統管理員權限」**：ETW 核心網路提供者需要提權；按介面上的
+  「以管理員身分重新啟動」，或以管理員執行捷徑。提權後程序監控立即生效
+- **程序行顯示「未在執行」但有紀錄**：該行程式目前沒有執行（歷史資料與今日累計仍正常顯示）
+- **驗證 ETW 是否可用**：以管理員執行 `NetworkMonitor.exe --etw-selftest` 後查看
+  `%LOCALAPPDATA%\NetworkMonitor\etw_selftest.txt`
 
 ## 技術棧
 
@@ -205,6 +223,7 @@ dotnet run --project src\NetworkMonitor -c Release
 - [ScottPlot 5.1.59](https://scottplot.net/) 統計圖表
 - [Microsoft.Data.Sqlite 10.0.12](https://learn.microsoft.com/ef/core/providers/sqlite/) + SQLite WAL
 - Windows `GetIfTable2`（iphlpapi）P/Invoke 取樣
+- [TraceEvent 3.2.8](https://github.com/microsoft/perfview) 消費 `Microsoft-Windows-Kernel-Network` ETW（v1.1 程序監控）
 
 ## 授權
 

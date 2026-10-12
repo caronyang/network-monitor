@@ -30,6 +30,10 @@ public sealed class StatsForm : Form, ILocalizable
     private readonly Label _range = new();
     private readonly Label _totals = new();
     private readonly ScottPlot.WinForms.FormsPlot _plot = new();
+    private readonly Panel _recordsPanel = new();
+    private readonly Label _recordsHeader = new();
+    private readonly ListView _records = new();
+    private List<string> _processKeys = new();
 
     private string _chart = "line";
     private string _period = "day";
@@ -139,7 +143,38 @@ public sealed class StatsForm : Form, ILocalizable
         _plot.Dock = DockStyle.Fill;
         _plot.BackColor = Color.White;
 
+        // ---------- traffic-stopwatch records ----------
+        _recordsPanel.Dock = DockStyle.Bottom;
+        _recordsPanel.Height = 190;
+        _recordsPanel.Padding = new Padding(10, 6, 10, 8);
+        _recordsPanel.BackColor = Color.White;
+
+        _recordsHeader.Text = Loc.T("stats.records");
+        _recordsHeader.Dock = DockStyle.Top;
+        _recordsHeader.AutoSize = false;
+        _recordsHeader.Height = 26;
+        _recordsHeader.Font = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold);
+        _recordsHeader.ForeColor = Color.FromArgb(28, 40, 56);
+
+        _records.Dock = DockStyle.Fill;
+        _records.View = View.Details;
+        _records.FullRowSelect = true;
+        _records.GridLines = true;
+        _records.MultiSelect = false;
+        _records.HeaderStyle = ColumnHeaderStyle.Nonclickable;
+        _records.Font = new Font("Segoe UI", 9f);
+        _records.BorderStyle = BorderStyle.None;
+        _records.Columns.Add(Loc.T("stats.recStart"), 155);
+        _records.Columns.Add(Loc.T("stats.recEnd"), 155);
+        _records.Columns.Add(Loc.T("stats.recDuration"), 90, HorizontalAlignment.Right);
+        _records.Columns.Add(Loc.T("main.down"), 120, HorizontalAlignment.Right);
+        _records.Columns.Add(Loc.T("main.up"), 120, HorizontalAlignment.Right);
+
+        _recordsPanel.Controls.Add(_records);
+        _recordsPanel.Controls.Add(_recordsHeader);
+
         Controls.Add(_plot);
+        Controls.Add(_recordsPanel);
         Controls.Add(_toolbar);
 
         PopulateChoices();
@@ -148,6 +183,7 @@ public sealed class StatsForm : Form, ILocalizable
         Load += (_, _) =>
         {
             LoadData(force: true);
+            RefreshRecords();
             BeginInvoke(new Action(ForceToolbarPaint));
         };
         KeyDown += (_, e) =>
@@ -236,6 +272,8 @@ public sealed class StatsForm : Form, ILocalizable
         var ifaceItems = new List<Choice> { new(null, Loc.T("stats.all")) };
         foreach (var it in _sampler.Latest.Items)
             ifaceItems.Add(new Choice(it.Id, it.Name));
+        foreach (var key in _processKeys)
+            ifaceItems.Add(new Choice(key, Loc.T("stats.processLabel", TrafficKeys.ProcessDisplayName(key))));
 
         string? current = (_cbIface.SelectedItem as Choice)?.Key;
         Fill(_cbIface, ifaceItems, current);
@@ -247,7 +285,18 @@ public sealed class StatsForm : Form, ILocalizable
         _title.Text = Loc.T("stats.title");
         _btnRefresh.Text = Loc.T("stats.refresh");
         _btnExport.Text = Loc.T("stats.export");
+        _recordsHeader.Text = Loc.T("stats.records");
+        if (_records.Columns.Count >= 5)
+        {
+            _records.Columns[0].Text = Loc.T("stats.recStart");
+            _records.Columns[1].Text = Loc.T("stats.recEnd");
+            _records.Columns[2].Text = Loc.T("stats.recDuration");
+            _records.Columns[3].Text = Loc.T("main.down");
+            _records.Columns[4].Text = Loc.T("main.up");
+        }
+
         PopulateChoices();
+        RefreshRecords();
         if (Visible && !IsDisposed) LoadData(force: true);
     }
 
@@ -295,7 +344,14 @@ public sealed class StatsForm : Form, ILocalizable
 
         try
         {
-            var data = await Task.Run(() => hourly ? _db.QueryDay(fromDay, iface) : _db.QueryDays(fromDay, toDay, iface));
+            var (data, procKeys) = await Task.Run(() =>
+            {
+                var d = hourly ? _db.QueryDay(fromDay, iface) : _db.QueryDays(fromDay, toDay, iface);
+                return (d, _db.ProcessKeys());
+            });
+
+            _processKeys = procKeys;
+            PopulateChoices();
             Render(data, fromDay, toDay, buckets, hourly);
         }
         catch
@@ -473,7 +529,7 @@ public sealed class StatsForm : Form, ILocalizable
         try
         {
             Directory.CreateDirectory(AppSettings.DataFolder);
-            string safe = (iface ?? "all").Replace(" ", "_");
+            string safe = (iface ?? "all").Replace(" ", "_").Replace(':', '_');
             string file = Path.Combine(AppSettings.DataFolder, $"traffic_{fromDay}_{toDay}_{safe}.csv");
             using (var writer = new StreamWriter(file, false, new System.Text.UTF8Encoding(true)))
             {
@@ -495,7 +551,56 @@ public sealed class StatsForm : Form, ILocalizable
     {
         if (!Visible || IsDisposed || _loading) return;
         if ((DateTime.UtcNow - _lastLoadUtc).TotalSeconds < 60) return;
+        RefreshRecords();
         LoadData(force: true);
+    }
+
+    /// <summary>Reloads the stopwatch-record list off the UI thread.</summary>
+    public void RefreshRecords()
+    {
+        if (IsDisposed) return;
+        Task.Run(() =>
+        {
+            var rows = _db.QueryMeasurements(300);
+            try
+            {
+                BeginInvoke(new Action(() => FillRecords(rows)));
+            }
+            catch
+            {
+                // window handle not created yet or already disposed - a later refresh will catch up
+            }
+        });
+    }
+
+    private void FillRecords(List<Measurement> rows)
+    {
+        if (IsDisposed) return;
+        _records.BeginUpdate();
+        _records.Items.Clear();
+        foreach (var m in rows)
+        {
+            var start = DateTimeOffset.FromUnixTimeSeconds(m.StartUnix).LocalDateTime;
+            var end = DateTimeOffset.FromUnixTimeSeconds(m.EndUnix).LocalDateTime;
+            var item = new ListViewItem(start.ToString("yyyy-MM-dd HH:mm:ss"));
+            item.SubItems.Add(end.ToString("yyyy-MM-dd HH:mm:ss"));
+            item.SubItems.Add((end - start).ToString(@"hh\:mm\:ss"));
+            item.SubItems.Add(FormatUtil.Bytes(m.Rx));
+            item.SubItems.Add(FormatUtil.Bytes(m.Tx));
+            _records.Items.Add(item);
+        }
+
+        if (rows.Count == 0)
+        {
+            var empty = new ListViewItem(Loc.T("stats.noRecords")) { ForeColor = Color.FromArgb(150, 160, 172) };
+            empty.SubItems.Add("");
+            empty.SubItems.Add("");
+            empty.SubItems.Add("");
+            empty.SubItems.Add("");
+            _records.Items.Add(empty);
+        }
+
+        _records.EndUpdate();
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

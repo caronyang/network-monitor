@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using NetworkMonitor.Core;
 
 namespace NetworkMonitor.UI;
@@ -52,10 +53,16 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
 
         // ---- dashboard ----
-        _main = new MainForm(settings, db);
+        _main = new MainForm(settings, db, sampler);
         _main.RequestStats += ShowStats;
         _main.RequestSettings += ShowSettings;
+        _main.RequestRestartElevated += RestartElevated;
         _main.FormClosed += (_, _) => Exit();
+
+        sampler.MeasurementCompleted += () =>
+        {
+            try { _stats?.RefreshRecords(); } catch { /* stats may be gone */ }
+        };
 
         // ---- tray ----
         _menu = new ContextMenuStrip { ShowImageMargin = false, Font = new Font("Segoe UI", 9f) };
@@ -272,6 +279,32 @@ public sealed class TrayApplicationContext : ApplicationContext
         _settingsForm.Saved += OnSettingsSaved;
         _settingsForm.FormClosed += (_, _) => { _settingsForm = null; };
         _settingsForm.ShowDialog(_main);
+    }
+
+    /// <summary>
+    /// Relaunches the app elevated (needed for ETW process monitoring) and exits this
+    /// instance. The new process passes --takeover so it waits for our mutex instead of
+    /// just waking the tray; if the user declines the UAC prompt we simply keep running.
+    /// </summary>
+    private void RestartElevated()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo(AppInfo.ExePath)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                Arguments = "--takeover",
+            };
+            Process.Start(psi);
+        }
+        catch
+        {
+            // UAC declined or launch failed - stay as the non-elevated instance
+            return;
+        }
+
+        Exit();
     }
 
     private void OnSettingsSaved()

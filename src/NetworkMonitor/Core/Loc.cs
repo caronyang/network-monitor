@@ -92,6 +92,47 @@ public static class Loc
         ["stats.weekHint"] = ("Daily", "分日"),
         ["stats.monthHint"] = ("Daily", "分日"),
 
+        // ---- process monitoring ----
+        ["proc.count"] = ("Monitored processes ({0}/5)", "監控程式 ({0}/5)"),
+        ["proc.add"] = ("Add…", "新增…"),
+        ["proc.remove"] = ("Remove", "移除監控"),
+        ["proc.name"] = ("Process", "程式"),
+        ["proc.running"] = ("Running", "執行中"),
+        ["proc.notRunning"] = ("Not running", "未在執行"),
+        ["proc.empty"] = ("No processes monitored yet. Click \"Add…\" to pick a running process.",
+                          "尚未監控任何程式。按「新增…」選取執行中的程式。"),
+        ["proc.adminNeeded"] = ("Process monitoring requires administrator rights",
+                                "程式監控需要系統管理員權限"),
+        ["proc.adminRestart"] = ("Restart as administrator", "以管理員身分重新啟動"),
+        ["proc.limit"] = ("At most 5 processes can be monitored at the same time.",
+                          "最多同時監控 5 個程式。"),
+        ["proc.tipRemove"] = ("Click × or use the row's right-click menu to remove a process.",
+                              "點 × 或列的右鍵選單可將程式移出監控。"),
+        ["proc.failed"] = ("Process monitoring failed to start", "程式監控啟動失敗"),
+
+        // ---- process picker dialog ----
+        ["picker.title"] = ("Select processes", "選擇監控程式"),
+        ["picker.search"] = ("Search:", "搜尋:"),
+        ["picker.instances"] = ("Instances", "實例數"),
+        ["picker.hint"] = ("Select one or more processes, then click Add.",
+                           "選取一個或多個程式，然後按「加入監控」。"),
+        ["picker.add"] = ("Add", "加入監控"),
+        ["picker.nothingNew"] = ("No new process selected.", "未選取新的程式。"),
+
+        // ---- traffic stopwatch ----
+        ["sw.start"] = ("⏱ Start", "⏱ 開始統計"),
+        ["sw.stop"] = ("⏹ Stop", "⏹ 停止統計"),
+        ["sw.tip"] = ("Traffic stopwatch: totals all traffic between Start and Stop",
+                      "流量碼表：統計開始到停止之間的全部傳輸量"),
+        ["stats.records"] = ("Traffic measurements", "即時統計紀錄"),
+        ["stats.recStart"] = ("Start", "開始時間"),
+        ["stats.recEnd"] = ("End", "結束時間"),
+        ["stats.recDuration"] = ("Duration", "時間長"),
+        ["stats.noRecords"] = ("No records yet - use the ⏱ Start button in the main window.",
+                               "尚無紀錄 - 在主視窗按「⏱ 開始統計」。"),
+        ["stats.processLabel"] = ("{0} (process)", "{0} (程式)"),
+
+
         // ---- settings ----
         ["settings.title"] = ("Settings", "設定"),
         ["settings.general"] = ("General", "一般"),

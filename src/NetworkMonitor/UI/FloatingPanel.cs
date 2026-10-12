@@ -4,8 +4,11 @@ using NetworkMonitor.UI.Controls;
 namespace NetworkMonitor.UI;
 
 /// <summary>
-/// Small always-on-top widget showing the aggregate real-time rates and a live sparkline.
-/// Borderless, draggable, double click opens the main window, right click shows a menu.
+/// Small always-on-top widget showing the aggregate real-time rates, a live sparkline and -
+/// once processes are being monitored - one compact block per process with the same fields
+/// (live rates + today's totals). Borderless, draggable, double click opens the main
+/// window, right click shows a menu. The base size stays exactly as before; the panel only
+/// grows while monitored processes exist (max 5 blocks).
 /// </summary>
 public sealed class FloatingPanel : Form, ILocalizable
 {
@@ -23,10 +26,13 @@ public sealed class FloatingPanel : Form, ILocalizable
     private readonly Label _caption = new();
     private readonly Label _close = new();
     private readonly ContextMenuStrip _menu = new();
+    private readonly ProcStrip _strip = new();
 
     private long _todayRx;
     private long _todayTx;
     private DateTime _lastTodayQueryUtc = DateTime.MinValue;
+    private int _desiredHeight = PanelHeight;
+    private int _stripHeight;
 
     public event Action? OpenMain;
     public event Action? OpenStats;
@@ -110,6 +116,9 @@ public sealed class FloatingPanel : Form, ILocalizable
         _spark.DownColor = Color.FromArgb(77, 182, 255);
         _spark.UpColor = Color.FromArgb(255, 176, 92);
 
+        _strip.SetBounds(0, PanelHeight, PanelWidth, 0);
+        _strip.BackColor = Color.FromArgb(19, 27, 38);
+
         Controls.Add(_caption);
         Controls.Add(_close);
         Controls.Add(_downValue);
@@ -118,6 +127,7 @@ public sealed class FloatingPanel : Form, ILocalizable
         Controls.Add(_todayDown);
         Controls.Add(_todayUp);
         Controls.Add(_spark);
+        Controls.Add(_strip);
 
         BuildMenu();
         _menu.Opening += (_, _) => ApplyMenuLocalization();
@@ -167,7 +177,7 @@ public sealed class FloatingPanel : Form, ILocalizable
         _todayCaption.Text = Loc.T("main.today");
         ToolTip.SetToolTip(this, Loc.T("panel.tip"));
         BuildMenu();
-        Invalidate();
+        _strip.Invalidate();
     }
 
     public void PushSnapshot(Snapshot snapshot)
@@ -179,7 +189,18 @@ public sealed class FloatingPanel : Form, ILocalizable
         _todayUp.Text = "↑ " + FormatUtil.Bytes(_todayTx);
         _spark.AddSample(snapshot.DownRate, snapshot.UpRate);
 
-        // today's totals come from SQLite once a minute (queried off the UI thread)
+        _strip.SetData(snapshot.Processes, snapshot.ProcState, _procToday);
+
+        int stripHeight = _strip.ContentHeight;
+        if (stripHeight != _stripHeight)
+        {
+            _stripHeight = stripHeight;
+            _desiredHeight = PanelHeight + stripHeight;
+            _strip.SetBounds(0, PanelHeight, PanelWidth, stripHeight);
+            Height = _desiredHeight; // OnResize re-applies region
+        }
+
+        // today's totals (global + per process) come from SQLite once a minute, off the UI thread
         if ((DateTime.UtcNow - _lastTodayQueryUtc).TotalSeconds >= 60)
         {
             _lastTodayQueryUtc = DateTime.UtcNow;
@@ -187,15 +208,27 @@ public sealed class FloatingPanel : Form, ILocalizable
             Task.Run(() =>
             {
                 long rx = 0, tx = 0;
+                var perProc = new Dictionary<string, DayTotal>(StringComparer.OrdinalIgnoreCase);
                 foreach (var kv in _db.TotalsPerInterface(day))
                 {
-                    rx += kv.Value.Rx;
-                    tx += kv.Value.Tx;
+                    if (TrafficKeys.IsProcess(kv.Key))
+                        perProc[kv.Key[TrafficKeys.ProcessPrefix.Length..]] = kv.Value;
+                    else
+                    {
+                        rx += kv.Value.Rx;
+                        tx += kv.Value.Tx;
+                    }
                 }
 
                 try
                 {
-                    if (!IsDisposed) BeginInvoke(() => { _todayRx = rx; _todayTx = tx; });
+                    if (!IsDisposed)
+                        BeginInvoke(() =>
+                        {
+                            _todayRx = rx;
+                            _todayTx = tx;
+                            _procToday = perProc;
+                        });
                 }
                 catch
                 {
@@ -204,6 +237,8 @@ public sealed class FloatingPanel : Form, ILocalizable
             });
         }
     }
+
+    private Dictionary<string, DayTotal> _procToday = new(StringComparer.OrdinalIgnoreCase);
 
     private void UpdateRegion()
     {
@@ -223,8 +258,8 @@ public sealed class FloatingPanel : Form, ILocalizable
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
-        if (Width != PanelWidth || Height != PanelHeight)
-            Size = new Size(PanelWidth, PanelHeight);
+        if (Width != PanelWidth || Height != _desiredHeight)
+            Size = new Size(PanelWidth, _desiredHeight);
         UpdateRegion();
     }
 
@@ -261,4 +296,131 @@ public sealed class FloatingPanel : Form, ILocalizable
 
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool ReleaseCapture();
+
+    /// <summary>
+    /// The stacked process blocks below the sparkline: one row per monitored process with
+    /// live down/up rates and today's totals; a hint row when ETW could not start.
+    /// Double-buffered child control so the 1 Hz updates stay flicker-free.
+    /// </summary>
+    private sealed class ProcStrip : Control
+    {
+        private const int HintHeight = 18;
+        private const int RowHeight = 28;
+
+        private static readonly Color DownColor = Color.FromArgb(77, 182, 255);
+        private static readonly Color UpColor = Color.FromArgb(255, 176, 92);
+        private static readonly Color MutedColor = Color.FromArgb(148, 163, 184);
+        private static readonly Color HintColor = Color.FromArgb(240, 130, 90);
+
+        private readonly Font _nameFont = new("Segoe UI Semibold", 8.5f, FontStyle.Bold);
+        private readonly Font _valueFont = new("Segoe UI Semibold", 8.5f, FontStyle.Bold);
+        private readonly Font _smallFont = new("Segoe UI", 8f);
+
+        private IReadOnlyList<ProcInfo> _items = Array.Empty<ProcInfo>();
+        private ProcessMonitorState _state = ProcessMonitorState.Stopped;
+        private IReadOnlyDictionary<string, DayTotal> _today = new Dictionary<string, DayTotal>();
+        private string _renderKey = "";
+
+        public ProcStrip()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.UserPaint | ControlStyles.SupportsTransparentBackColor, true);
+            BackColor = Color.FromArgb(19, 27, 38);
+        }
+
+        public int ContentHeight =>
+            _items.Count == 0
+                ? 0
+                : _items.Count * RowHeight + (NeedsHint ? HintHeight : 0);
+
+        private bool NeedsHint => _items.Count > 0 && _state != ProcessMonitorState.Running;
+
+        public void SetData(IReadOnlyList<ProcInfo> items, ProcessMonitorState state,
+            IReadOnlyDictionary<string, DayTotal> today)
+        {
+            _items = items;
+            _state = state;
+            _today = today;
+
+            var sb = new System.Text.StringBuilder(48);
+            sb.Append(_state).Append('|');
+            foreach (var p in _items)
+            {
+                today.TryGetValue(p.Name, out var t);
+                sb.Append(p.Name).Append(':').Append(p.RxRate).Append('/').Append(p.TxRate)
+                  .Append(';').Append(t.Rx).Append('/').Append(t.Tx).Append(';');
+            }
+
+            string key = sb.ToString();
+            if (key != _renderKey && _items.Count > 0)
+            {
+                _renderKey = key;
+                Invalidate();
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _nameFont.Dispose();
+                _valueFont.Dispose();
+                _smallFont.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.Clear(BackColor);
+            if (_items.Count == 0) return;
+
+            int y = 2;
+            if (NeedsHint)
+            {
+                var hintRect = new Rectangle(12, y, Width - 20, HintHeight - 3);
+                TextRenderer.DrawText(g, "⚠ " + Loc.T("proc.adminNeeded"), _smallFont, hintRect, HintColor,
+                    TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+                y += HintHeight;
+            }
+
+            foreach (var p in _items)
+            {
+                DrawRow(g, p, y);
+                y += RowHeight;
+            }
+        }
+
+        private void DrawRow(Graphics g, ProcInfo p, int y)
+        {
+            string name = p.Name + ".exe";
+            var nameRect = new Rectangle(12, y + 1, Width - 24, 14);
+            TextRenderer.DrawText(g, name, _nameFont, nameRect, Color.White,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
+
+            DrawPair(g, "↓ " + FormatUtil.Rate(p.RxRate), "↑ " + FormatUtil.Rate(p.TxRate), _valueFont, y + 1, 14);
+
+            _today.TryGetValue(p.Name, out var today);
+            var capRect = new Rectangle(12, y + 15, 42, 12);
+            TextRenderer.DrawText(g, Loc.T("main.today"), _smallFont, capRect, MutedColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPadding);
+
+            DrawPair(g, "↓ " + FormatUtil.Bytes(today.Rx), "↑ " + FormatUtil.Bytes(today.Tx), _smallFont, y + 15, 12);
+        }
+
+        private void DrawPair(Graphics g, string left, string right, Font font, int y, int height)
+        {
+            var rightSize = TextRenderer.MeasureText(g, right, font, new Size(Width, height), TextFormatFlags.NoPadding);
+            var rightRect = new Rectangle(Width - 8 - rightSize.Width, y, rightSize.Width, height);
+            TextRenderer.DrawText(g, right, font, rightRect, UpColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.NoPadding);
+
+            var leftSize = TextRenderer.MeasureText(g, left, font, new Size(Width, height), TextFormatFlags.NoPadding);
+            var leftRect = new Rectangle(rightRect.X - 10 - leftSize.Width, y, leftSize.Width, height);
+            TextRenderer.DrawText(g, left, font, leftRect, DownColor,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.NoPadding);
+        }
+    }
 }
