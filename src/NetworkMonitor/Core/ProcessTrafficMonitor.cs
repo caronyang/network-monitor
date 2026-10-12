@@ -36,6 +36,21 @@ public sealed class ProcessTrafficMonitor : IDisposable
         public long LastMs;
     }
 
+    /// <summary>
+    /// Fixed session name: leaks from a crashed/killed instance are predictable and can be
+    /// removed before creating a new one (the per-PID naming of the first build left stale
+    /// sessions behind that exhausted the system's logger limit - 0x800705AA).
+    /// </summary>
+    private const string SessionName = "NetworkMonitor-Kernel";
+
+    /// <summary>Stale-session prefix (also matches the former per-PID names).</summary>
+    private const string SessionPrefix = "NetworkMonitor-Kernel";
+
+    /// <summary>Do not hammer the ETW session creation while the failure persists.</summary>
+    private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
+
+    private long _lastAttemptMs = long.MinValue;
+
     private readonly ConcurrentDictionary<int, Counters> _counters = new();
     private readonly ConcurrentDictionary<int, string> _nameByPid = new();
     private readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -77,6 +92,12 @@ public sealed class ProcessTrafficMonitor : IDisposable
                 return;
             }
 
+            // throttle retries so a persistent failure does not hammer ETW or the log
+            long now = _clock.ElapsedMilliseconds;
+            if (State == ProcessMonitorState.Failed && now - _lastAttemptMs < RetryInterval.TotalMilliseconds)
+                return;
+
+            _lastAttemptMs = now;
             try
             {
                 StartCore();
@@ -95,7 +116,7 @@ public sealed class ProcessTrafficMonitor : IDisposable
                 Cleanup();
                 LastError = ex.Message;
                 State = ProcessMonitorState.Failed;
-                Diag.Log($"etw: failed: {ex.GetType().Name}: {ex.Message}");
+                Diag.Log($"etw: failed: {ex.GetType().Name}: {ex.Message} (retry in {RetryInterval.TotalSeconds:0}s)");
             }
         }
     }
@@ -167,15 +188,17 @@ public sealed class ProcessTrafficMonitor : IDisposable
 
     private void StartCore()
     {
-        // Unique name: a crashed instance leaves no session that could block the next start
-        // (real-time kernel sessions die with their controller process anyway).
-        string sessionName = $"NetworkMonitor-Kernel-{Environment.ProcessId}";
-        var session = new TraceEventSession(sessionName);
+        // Remove any leftover session of ours first: a killed instance can leave a real-time
+        // session behind, and too many of them exhaust the system logger limit, after which
+        // creating a new session fails with ERROR_NO_SYSTEM_RESOURCES (0x800705AA).
+        CleanupStaleSessions();
+
+        var session = new TraceEventSession(SessionName);
         try
         {
             session.EnableKernelProvider(KernelTraceEventParser.Keywords.NetworkTCPIP);
 
-            var source = new ETWTraceEventSource(sessionName, TraceEventSourceType.Session);
+            var source = new ETWTraceEventSource(SessionName, TraceEventSourceType.Session);
             var kernel = source.Kernel;
             kernel.TcpIpRecv += OnTcpRecv;
             kernel.TcpIpSend += OnTcpSend;
@@ -195,6 +218,36 @@ public sealed class ProcessTrafficMonitor : IDisposable
         {
             session.Dispose();
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Stops ETW sessions left behind by earlier Network Monitor instances (including the
+    /// per-PID names used before v1.1.3) so the logger limit cannot be exhausted.
+    /// </summary>
+    private static void CleanupStaleSessions()
+    {
+        try
+        {
+            foreach (var name in TraceEventSession.GetActiveSessionNames())
+            {
+                if (!name.StartsWith(SessionPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+                try
+                {
+                    using var stale = TraceEventSession.GetActiveSession(name);
+                    if (stale is null) continue;
+                    stale.Stop();
+                    Diag.Log($"etw: stopped stale session '{name}'");
+                }
+                catch (Exception ex)
+                {
+                    Diag.Log($"etw: could not stop stale session '{name}': {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Diag.Log($"etw: session enumeration failed: {ex.Message}");
         }
     }
 

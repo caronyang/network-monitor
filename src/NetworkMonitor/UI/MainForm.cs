@@ -299,6 +299,10 @@ public sealed class MainForm : Form, ILocalizable
                 ProcessMonitorState.Failed => Loc.T("proc.failed"),
                 _ => Loc.T("proc.adminHintSmall"),
             };
+            _tooltips.SetToolTip(_hintAdmin,
+                state == ProcessMonitorState.Failed
+                    ? (_sampler.Processes?.LastError ?? Loc.T("proc.failed"))
+                    : Loc.T("proc.adminNeeded"));
         }
 
         _lastProcCount = n;
