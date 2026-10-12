@@ -294,13 +294,22 @@ public sealed class TrayApplicationContext : ApplicationContext
             {
                 UseShellExecute = true,
                 Verb = "runas",
-                Arguments = "--takeover",
+                // the pid lets the new instance wait for us to exit before taking the
+                // single-instance mutex (deterministic hand-over)
+                Arguments = $"--takeover {Environment.ProcessId}",
             };
             Process.Start(psi);
+            Diag.Log("elevation requested (runas) - exiting this instance");
         }
-        catch
+        catch (Exception ex)
         {
             // UAC declined or launch failed - stay as the non-elevated instance
+            Diag.Log($"elevation failed: {ex.GetType().Name}: {ex.Message}");
+            MessageBox.Show(
+                Loc.T("proc.adminCancelled"),
+                Loc.T("proc.name"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
             return;
         }
 

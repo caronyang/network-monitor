@@ -17,26 +17,40 @@ internal static class Program
             return;
         }
 
+        // "--takeover [pid]": an elevated instance replacing a non-elevated one. Waiting for
+        // the old process to actually exit makes the mutex hand-over deterministic; the
+        // previous WaitOne-only approach could lose the race, wake the old instance and
+        // exit, which looked like "the restart as administrator did nothing".
         bool takeover = args.Any(a => a.Equals("--takeover", StringComparison.OrdinalIgnoreCase));
+        int takeoverPid = 0;
+        if (takeover)
+        {
+            int idx = Array.FindIndex(args, a => a.Equals("--takeover", StringComparison.OrdinalIgnoreCase));
+            if (idx >= 0 && idx + 1 < args.Length) int.TryParse(args[idx + 1], out takeoverPid);
+        }
+
+        Diag.Log($"start takeover={takeover} oldPid={takeoverPid} elevated={ProcessTrafficMonitor.IsElevated}");
+
+        if (takeover && takeoverPid > 0) EnsureOldInstanceGone(takeoverPid, TimeSpan.FromSeconds(10));
 
         var mutex = new Mutex(true, MutexName, out bool createdNew);
-        if (!createdNew)
+        if (!createdNew && takeover)
         {
-            // --takeover: an elevated instance is replacing a non-elevated one. The old
-            // process exits as soon as it has launched us, so wait for it to let go.
-            if (takeover)
+            // the old process may still be releasing its handle: retry briefly
+            for (int i = 0; i < 12 && !createdNew; i++)
             {
-                try
-                {
-                    if (mutex.WaitOne(TimeSpan.FromSeconds(8))) goto Acquired;
-                }
-                catch (AbandonedMutexException)
-                {
-                    goto Acquired;
-                }
+                Thread.Sleep(500);
+                mutex.Dispose();
+                mutex = new Mutex(true, MutexName, out createdNew);
             }
 
+            Diag.Log($"takeover mutex acquired={createdNew}");
+        }
+
+        if (!createdNew)
+        {
             // Another instance is already running: ask it to show its window.
+            Diag.Log("second instance -> waking the existing one");
             try
             {
                 using var wake = EventWaitHandle.OpenExisting(WakeName);
@@ -51,7 +65,6 @@ internal static class Program
             return;
         }
 
-    Acquired:
         EventWaitHandle? wakeEvent = null;
         ProcessTrafficMonitor? processes = null;
         try
@@ -91,6 +104,46 @@ internal static class Program
             try { mutex.ReleaseMutex(); }
             catch { /* already released */ }
             mutex.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Waits for the previous instance to exit; if it is still alive after the timeout it is
+    /// terminated (same application, explicitly handing over) so the elevation always wins.
+    /// </summary>
+    private static void EnsureOldInstanceGone(int pid, TimeSpan timeout)
+    {
+        try
+        {
+            using var p = System.Diagnostics.Process.GetProcessById(pid);
+            if (p.WaitForExit((int)timeout.TotalMilliseconds))
+            {
+                Diag.Log($"old instance {pid} exited");
+                return;
+            }
+
+            Diag.Log($"old instance {pid} still alive after {timeout.TotalSeconds:0}s - terminating it");
+            try { p.Kill(); } catch { /* ignore */ }
+            p.WaitForExit(3000);
+        }
+        catch
+        {
+            // already gone
+        }
+    }
+
+    /// <summary>Waits for another process to exit (used by the elevation hand-over).</summary>
+    private static void WaitForExit(int pid, TimeSpan timeout)
+    {
+        try
+        {
+            using var p = System.Diagnostics.Process.GetProcessById(pid);
+            if (!p.WaitForExit((int)timeout.TotalMilliseconds))
+                Diag.Log($"wait for pid {pid} timed out");
+        }
+        catch
+        {
+            // already gone
         }
     }
 

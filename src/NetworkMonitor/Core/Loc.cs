@@ -107,6 +107,8 @@ public static class Loc
         ["proc.adminBody"] = ("Process monitoring needs administrator rights.\nRelaunch Network Monitor as administrator now?",
                               "程式監控需要系統管理員權限。\n要現在以系統管理員身分重新啟動程式嗎？"),
         ["proc.adminYes"] = ("Restart as administrator", "以管理員重新啟動"),
+        ["proc.adminCancelled"] = ("Elevation was cancelled - the app keeps running without administrator rights, so process monitoring stays off.",
+                                   "已取消提權 — 程式將以一般權限繼續執行，程式監控維持停用。"),
         ["proc.adminRestart"] = ("Restart as administrator", "以管理員身分重新啟動"),
         ["proc.removeBlock"] = ("Click the small block before a process name to remove it.",
                                 "點程式名稱前的色塊可將程式移出監控。"),

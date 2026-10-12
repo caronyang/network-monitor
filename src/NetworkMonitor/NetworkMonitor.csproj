@@ -10,7 +10,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>NetworkMonitor</AssemblyName>
     <RootNamespace>NetworkMonitor</RootNamespace>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <Product>Network Monitor</Product>
     <Description>Lightweight real-time network traffic monitor for Windows</Description>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>

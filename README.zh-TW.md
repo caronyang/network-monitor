@@ -57,7 +57,7 @@ IPv4 + IPv6，含 QUIC/HTTP3），需以**系統管理員**執行。
 ### 安裝程式（建議）
 
 1. 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-   `NetworkMonitor-1.1.2-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
+   `NetworkMonitor-1.1.3-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
 2. 執行安裝，安裝過程可勾選：
    - 開始功能表捷徑（固定建立）、桌面捷徑（選用）
    - **開機時自動啟動**（寫入與程式內開機啟動開關相同的登錄值）
@@ -68,7 +68,7 @@ IPv4 + IPv6，含 QUIC/HTTP3），需以**系統管理員**執行。
 ### 免安裝版（portable）
 
 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-`NetworkMonitor-1.1.2-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
+`NetworkMonitor-1.1.3-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
 （需 .NET 10 Desktop Runtime）。
 
 或自行執行 `publish-portable.bat`（framework-dependent）／`publish-selfcontained.bat`
@@ -126,6 +126,7 @@ IPv4 + IPv6，含 QUIC/HTTP3），需以**系統管理員**執行。
   networkmonitor.db                        SQLite（WAL；traffic 介面+P:程式、measurement 碼表）
   settings.json                             設定（含 processMonitors 監控程式清單，最多 5）
   crash.log                                 異常記錄
+  diagnostics.log                           提權接棒與 ETW 啟動結果（診斷用）
   etw_selftest.txt                          ETW 自測輸出（--etw-selftest 產生）
 ```
 
@@ -226,6 +227,10 @@ dotnet run --project src\NetworkMonitor -c Release
 - **重灌系統後舊資料**：資料在 `%LOCALAPPDATA%\NetworkMonitor\`，保留即可，程式會自動接續
 - **「程式監控需要系統管理員權限」**：ETW 核心網路提供者需要提權；按介面上的
   「以管理員身分重新啟動」，或以管理員執行捷徑。提權後程序監控立即生效
+- **按了「以管理員重新啟動」卻好像沒反應**：程式會把接棒過程寫入
+  `%LOCALAPPDATA%\NetworkMonitor\diagnostics.log`（是否提權成功、ETW 啟動結果）。
+  若您在 UAC 視窗按了取消，程式會出現提示並維持一般權限執行；若記錄顯示
+  `elevated=True` 但 session 啟動失敗，請把該檔案附在問題回報中
 - **程序行顯示「未在執行」但有紀錄**：該行程式目前沒有執行（歷史資料與今日累計仍正常顯示）
 - **驗證 ETW 是否可用**：以管理員執行 `NetworkMonitor.exe --etw-selftest` 後查看
   `%LOCALAPPDATA%\NetworkMonitor\etw_selftest.txt`

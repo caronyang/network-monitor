@@ -82,17 +82,20 @@ public sealed class ProcessTrafficMonitor : IDisposable
                 StartCore();
                 LastError = null;
                 State = ProcessMonitorState.Running;
+                Diag.Log("etw: kernel-network session running");
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
                 Cleanup();
                 State = ProcessMonitorState.RequiresAdmin;
+                Diag.Log($"etw: access denied: {ex.Message}");
             }
             catch (Exception ex)
             {
                 Cleanup();
                 LastError = ex.Message;
                 State = ProcessMonitorState.Failed;
+                Diag.Log($"etw: failed: {ex.GetType().Name}: {ex.Message}");
             }
         }
     }

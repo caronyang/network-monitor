@@ -59,7 +59,7 @@ All screenshots use the English interface (the UI language is switchable).
 
 ### Installer (recommended)
 
-1. Download `NetworkMonitor-1.1.2-x64-setup.exe` from the
+1. Download `NetworkMonitor-1.1.3-x64-setup.exe` from the
    [Releases](https://github.com/caronyang/network-monitor/releases) page
    (use `-x86-setup.exe` for 32-bit systems)
 2. Run it. The installer offers:
@@ -72,7 +72,7 @@ All screenshots use the English interface (the UI language is switchable).
 
 ### Portable
 
-Download `NetworkMonitor-1.1.2-portable-x64.zip` from the
+Download `NetworkMonitor-1.1.3-portable-x64.zip` from the
 [Releases](https://github.com/caronyang/network-monitor/releases) page, extract it and
 run `NetworkMonitor.exe` (requires the .NET 10 Desktop Runtime).
 
@@ -140,6 +140,7 @@ Drag to move, double-click to open the main window, right-click for a menu,
   networkmonitor.db     SQLite database (WAL) - traffic (interfaces + P: processes), measurement
   settings.json         settings (processMonitors monitored-process list, max 5)
   crash.log             error log
+  diagnostics.log       elevation hand-over and ETW start results
   etw_selftest.txt      ETW self-test output (produced by --etw-selftest)
 ```
 
@@ -254,6 +255,11 @@ Diagnostic environment variables (do not set for normal use):
 - **"Process monitoring requires administrator rights"**: the ETW kernel-network provider
   needs elevation; click "Restart as administrator" on the hint bar or start the shortcut
   as administrator. Monitoring activates immediately after the restart.
+- **"Restart as administrator" seems to do nothing**: the hand-over is logged to
+  `%LOCALAPPDATA%\NetworkMonitor\diagnostics.log` (elevated yes/no, ETW session start).
+  If you cancel the Windows UAC prompt the app tells you and keeps running unelevated;
+  if the log shows the session failing while `elevated=True`, please attach the file to a
+  bug report.
 - **A process row says "Not running" but has data**: that app is not currently running
   (history and today's totals are still shown)
 - **Verify ETW availability**: run `NetworkMonitor.exe --etw-selftest` as administrator,
