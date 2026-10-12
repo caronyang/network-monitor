@@ -1,5 +1,9 @@
 # Network Monitor 網路監控程式
 
+![platform](https://img.shields.io/badge/platform-Windows-blue)
+![.NET](https://img.shields.io/badge/.NET-10.0-brightgreen)
+![UI](https://img.shields.io/badge/UI-English%20%2F%20繁體中文-orange)
+
 [English](README.md) | **繁體中文**
 
 Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低 CPU、低記憶體，

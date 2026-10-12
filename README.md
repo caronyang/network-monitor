@@ -1,5 +1,9 @@
 # Network Monitor
 
+![platform](https://img.shields.io/badge/platform-Windows-blue)
+![.NET](https://img.shields.io/badge/.NET-10.0-brightgreen)
+![UI](https://img.shields.io/badge/UI-English%20%2F%20繁體中文-orange)
+
 **English** | [繁體中文](README.zh-TW.md)
 
 A lightweight real-time network traffic monitor that lives in the Windows system tray:
