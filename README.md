@@ -37,13 +37,15 @@ provider (TCP + UDP, IPv4 + IPv6, including QUIC/HTTP3) and require administrato
 
 ## Screenshots
 
+All screenshots use the English interface (the UI language is switchable).
+
 | Main window | Floating panel |
 |---|---|
 | ![Main window](screenshots/main.png) | ![Floating panel](screenshots/panel.png) |
 
-| Statistics (English) | Statistics (繁體中文) |
-|---|---|
-| ![Statistics](screenshots/stats-en.png) | ![Statistics ZH](screenshots/stats-zh.png) |
+| Statistics & traffic measurements |
+|---|
+| ![Statistics](screenshots/stats-en.png) |
 
 ## Requirements
 

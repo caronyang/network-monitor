@@ -35,13 +35,15 @@ IPv4 + IPv6，含 QUIC/HTTP3），需以**系統管理員**執行。
 
 ## 畫面截圖
 
-| 統計圖表（英文） | 浮動面板 |
-|---|---|
-| ![統計圖表](screenshots/stats-en.png) | ![浮動面板](screenshots/panel.png) |
+所有截圖皆使用英文介面（介面語言可即時切換）。
 
-| 統計圖表（繁體中文） | |
+| 主視窗 | 浮動面板 |
 |---|---|
-| ![統計圖表中文](screenshots/stats-zh.png) | |
+| ![主視窗](screenshots/main.png) | ![浮動面板](screenshots/panel.png) |
+
+| 統計圖表與碼表紀錄 |
+|---|
+| ![統計圖表](screenshots/stats-en.png) |
 
 ## 系統需求
 
