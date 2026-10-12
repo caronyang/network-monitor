@@ -312,6 +312,9 @@ public sealed class FloatingPanel : Form, ILocalizable
         private static readonly Color MutedColor = Color.FromArgb(148, 163, 184);
         private static readonly Color HintColor = Color.FromArgb(240, 130, 90);
 
+        /// <summary>Fixed width of one value column ("↓ 153 MB/s" fits); keeps rows inside the panel.</summary>
+        private const int ValueCol = 66;
+
         private readonly Font _nameFont = new("Segoe UI Semibold", 8.5f, FontStyle.Bold);
         private readonly Font _valueFont = new("Segoe UI Semibold", 8.5f, FontStyle.Bold);
         private readonly Font _smallFont = new("Segoe UI", 8f);
@@ -395,32 +398,34 @@ public sealed class FloatingPanel : Form, ILocalizable
 
         private void DrawRow(Graphics g, ProcInfo p, int y)
         {
+            int upRight = Width - 8;        // ↑ value right edge
+            int downRight = upRight - ValueCol;
+
             string name = p.Name + ".exe";
-            var nameRect = new Rectangle(12, y + 1, Width - 24, 14);
+            int nameMax = Math.Max(30, downRight - ValueCol - 6 - 12);
+            var nameRect = new Rectangle(12, y + 1, nameMax, 14);
             TextRenderer.DrawText(g, name, _nameFont, nameRect, Color.White,
                 TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
-            DrawPair(g, "↓ " + FormatUtil.Rate(p.RxRate), "↑ " + FormatUtil.Rate(p.TxRate), _valueFont, y + 1, 14);
+            // line 2 holds the caption at x=12; line 1 gives the name the full first column
+            DrawCell(g, "↓ " + FormatUtil.Rate(p.RxRate), downRight, _valueFont, y + 1, 14, DownColor);
+            DrawCell(g, "↑ " + FormatUtil.Rate(p.TxRate), upRight, _valueFont, y + 1, 14, UpColor);
 
             _today.TryGetValue(p.Name, out var today);
             var capRect = new Rectangle(12, y + 15, 42, 12);
             TextRenderer.DrawText(g, Loc.T("main.today"), _smallFont, capRect, MutedColor,
                 TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPadding);
 
-            DrawPair(g, "↓ " + FormatUtil.Bytes(today.Rx), "↑ " + FormatUtil.Bytes(today.Tx), _smallFont, y + 15, 12);
+            DrawCell(g, "↓ " + FormatUtil.Bytes(today.Rx), downRight, _smallFont, y + 15, 12, DownColor);
+            DrawCell(g, "↑ " + FormatUtil.Bytes(today.Tx), upRight, _smallFont, y + 15, 12, UpColor);
         }
 
-        private void DrawPair(Graphics g, string left, string right, Font font, int y, int height)
+        /// <summary>Right-aligned value that always stays inside the panel bounds.</summary>
+        private void DrawCell(Graphics g, string text, int rightEdge, Font font, int y, int height, Color color)
         {
-            var rightSize = TextRenderer.MeasureText(g, right, font, new Size(Width, height), TextFormatFlags.NoPadding);
-            var rightRect = new Rectangle(Width - 8 - rightSize.Width, y, rightSize.Width, height);
-            TextRenderer.DrawText(g, right, font, rightRect, UpColor,
-                TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.NoPadding);
-
-            var leftSize = TextRenderer.MeasureText(g, left, font, new Size(Width, height), TextFormatFlags.NoPadding);
-            var leftRect = new Rectangle(rightRect.X - 10 - leftSize.Width, y, leftSize.Width, height);
-            TextRenderer.DrawText(g, left, font, leftRect, DownColor,
-                TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.NoPadding);
+            var rect = new Rectangle(rightEdge - ValueCol, y - 1, ValueCol, height + 2);
+            TextRenderer.DrawText(g, text, font, rect, color,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
         }
     }
 }

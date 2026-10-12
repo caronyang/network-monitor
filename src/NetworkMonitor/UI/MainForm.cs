@@ -18,19 +18,20 @@ public sealed class MainForm : Form, ILocalizable
     private readonly Label _title = new();
     private readonly Button _btnStats = new();
     private readonly Button _btnSettings = new();
-    private readonly Button _btnMeasStart = new();
-    private readonly Button _btnMeasStop = new();
-    private readonly Label _measLabel = new();
 
     private readonly SummaryBand _summary = new();
     private readonly Panel _procOps = new();
     private readonly Label _procTitle = new();
     private readonly Button _btnAddProc = new();
-    private readonly Label _procAdmin = new();
-    private readonly Button _btnElevate = new();
+    private readonly Label _hintAdmin = new();
     private readonly ProcessGridControl _procGrid = new();
     private readonly InterfaceGridControl _grid = new();
     private readonly ToolTip _tooltips = new();
+    private readonly Panel _swBar = new();
+    private readonly Label _swTitle = new();
+    private readonly Button _swStart = new();
+    private readonly Button _swStop = new();
+    private readonly Label _swStatus = new();
 
     private int _lastProcCount = -1;
     private IReadOnlyDictionary<string, DayTotal> _today = new Dictionary<string, DayTotal>();
@@ -86,23 +87,10 @@ public sealed class MainForm : Form, ILocalizable
 
         ConfigureButton(_btnSettings, (_, _) => RequestSettings?.Invoke());
         ConfigureButton(_btnStats, (_, _) => RequestStats?.Invoke());
-        ConfigureButton(_btnMeasStart, (_, _) => { _sampler.StartMeasurement(); UpdateMeasurementUi(); });
-        ConfigureButton(_btnMeasStop, (_, _) => { _sampler.StopMeasurement(); UpdateMeasurementUi(); });
-
-        _measLabel.AutoSize = true;
-        _measLabel.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-        _measLabel.ForeColor = Color.FromArgb(184, 92, 0);
-        _measLabel.Margin = new Padding(0, 9, 0, 0);
-        _tooltips.SetToolTip(_measLabel, Loc.T("sw.tip"));
-        _tooltips.SetToolTip(_btnMeasStart, Loc.T("sw.tip"));
-        _tooltips.SetToolTip(_btnMeasStop, Loc.T("sw.tip"));
 
         // add in reverse order because of RightToLeft flow
         right.Controls.Add(_btnSettings);
         right.Controls.Add(_btnStats);
-        right.Controls.Add(_btnMeasStop);
-        right.Controls.Add(_btnMeasStart);
-        right.Controls.Add(_measLabel);
 
         _toolbar.Controls.Add(right);
         _toolbar.Controls.Add(_title); // title last -> left side
@@ -134,20 +122,17 @@ public sealed class MainForm : Form, ILocalizable
         _btnAddProc.Margin = new Padding(0, 5, 0, 0);
         _tooltips.SetToolTip(_btnAddProc, Loc.T("proc.tipRemove"));
 
-        _procAdmin.AutoSize = true;
-        _procAdmin.Font = new Font("Segoe UI", 9f);
-        _procAdmin.ForeColor = Color.FromArgb(196, 43, 28);
-        _procAdmin.Margin = new Padding(14, 11, 6, 0);
-        _procAdmin.Visible = false;
-
-        ConfigureButton(_btnElevate, (_, _) => RequestRestartElevated?.Invoke());
-        _btnElevate.Margin = new Padding(0, 5, 0, 0);
-        _btnElevate.Visible = false;
+        _hintAdmin.AutoSize = true;
+        _hintAdmin.Font = new Font("Segoe UI", 9f);
+        _hintAdmin.ForeColor = Color.FromArgb(196, 43, 28);
+        _hintAdmin.Margin = new Padding(14, 11, 6, 0);
+        _hintAdmin.Cursor = Cursors.Hand;
+        _hintAdmin.Click += (_, _) => AskElevateIfNeeded();
+        _hintAdmin.Visible = false;
 
         opsFlow.Controls.Add(_procTitle);
         opsFlow.Controls.Add(_btnAddProc);
-        opsFlow.Controls.Add(_procAdmin);
-        opsFlow.Controls.Add(_btnElevate);
+        opsFlow.Controls.Add(_hintAdmin);
         _procOps.Controls.Add(opsFlow);
 
         // ---- process grid (only visible while something is monitored) ----
@@ -156,10 +141,49 @@ public sealed class MainForm : Form, ILocalizable
         _procGrid.Height = 0;
         _procGrid.RemoveRequested += RemoveProcess;
 
+        // ---- traffic stopwatch bottom bar ----
+        _swBar.Dock = DockStyle.Bottom;
+        _swBar.Height = 46;
+        _swBar.BackColor = Color.FromArgb(247, 249, 252);
+        _swBar.Padding = new Padding(12, 0, 12, 0);
+
+        var swFlow = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.LeftToRight,
+            WrapContents = false,
+            AutoSize = false,
+        };
+
+        _swTitle.AutoSize = true;
+        _swTitle.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+        _swTitle.ForeColor = Color.FromArgb(45, 62, 80);
+        _swTitle.Margin = new Padding(0, 11, 10, 0);
+
+        ConfigureButton(_swStart, (_, _) => { _sampler.StartMeasurement(); UpdateMeasurementUi(); });
+        _swStart.Margin = new Padding(0, 5, 0, 0);
+        _tooltips.SetToolTip(_swStart, Loc.T("sw.tip"));
+        ConfigureButton(_swStop, (_, _) => { _sampler.StopMeasurement(); UpdateMeasurementUi(); });
+        _swStop.Margin = new Padding(0, 5, 0, 0);
+        _tooltips.SetToolTip(_swStop, Loc.T("sw.tip"));
+
+        _swStatus.AutoSize = true;
+        _swStatus.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
+        _swStatus.ForeColor = Color.FromArgb(184, 92, 0);
+        _swStatus.Margin = new Padding(14, 11, 0, 0);
+        _swStatus.Visible = false;
+
+        swFlow.Controls.Add(_swTitle);
+        swFlow.Controls.Add(_swStart);
+        swFlow.Controls.Add(_swStop);
+        swFlow.Controls.Add(_swStatus);
+        _swBar.Controls.Add(swFlow);
+
         // ---- grid ----
         _grid.Dock = DockStyle.Fill;
 
         Controls.Add(_grid);
+        Controls.Add(_swBar);
         Controls.Add(_procGrid);
         Controls.Add(_procOps);
         Controls.Add(_summary);
@@ -191,14 +215,16 @@ public sealed class MainForm : Form, ILocalizable
         _title.Text = Loc.T("main.title");
         _btnStats.Text = Loc.T("main.stats");
         _btnSettings.Text = Loc.T("main.settings");
-        _btnMeasStart.Text = Loc.T("sw.start");
-        _btnMeasStop.Text = Loc.T("sw.stop");
+        _swTitle.Text = Loc.T("sw.title");
+        _swStart.Text = Loc.T("sw.start");
+        _swStop.Text = Loc.T("sw.stop");
         _btnAddProc.Text = Loc.T("proc.add");
-        _btnElevate.Text = Loc.T("proc.adminRestart");
-        _tooltips.SetToolTip(_btnMeasStart, Loc.T("sw.tip"));
-        _tooltips.SetToolTip(_btnMeasStop, Loc.T("sw.tip"));
+        _hintAdmin.Text = Loc.T("proc.adminHintSmall");
+        _tooltips.SetToolTip(_swStart, Loc.T("sw.tip"));
+        _tooltips.SetToolTip(_swStop, Loc.T("sw.tip"));
         _tooltips.SetToolTip(_btnAddProc, Loc.T("proc.tipRemove"));
         UpdateProcOpsUi(ProcessMonitorState.Stopped, force: true);
+        UpdateMeasurementUi();
         _summary.Invalidate();
         _grid.Invalidate();
         _procGrid.Invalidate();
@@ -234,17 +260,17 @@ public sealed class MainForm : Form, ILocalizable
         {
             _procGrid.Height = Math.Max(_procGrid.ContentHeight, 60);
         }
-        // admin hint shows when names are monitored but the ETW session cannot run
+        // admin hint shows when names are monitored but the ETW session cannot run;
+        // clicking it opens the elevation question dialog
         bool showAdminHint = n > 0 && state != ProcessMonitorState.Running;
-        if (showAdminHint != _procAdmin.Visible || force)
+        if (showAdminHint != _hintAdmin.Visible || force)
         {
-            _procAdmin.Visible = showAdminHint;
-            _btnElevate.Visible = showAdminHint && state == ProcessMonitorState.RequiresAdmin;
-            _procAdmin.Text = state switch
+            _hintAdmin.Visible = showAdminHint;
+            _hintAdmin.Text = state switch
             {
-                ProcessMonitorState.RequiresAdmin => Loc.T("proc.adminNeeded"),
+                ProcessMonitorState.RequiresAdmin => Loc.T("proc.adminHintSmall"),
                 ProcessMonitorState.Failed => Loc.T("proc.failed"),
-                _ => "",
+                _ => Loc.T("proc.adminHintSmall"),
             };
         }
 
@@ -260,6 +286,19 @@ public sealed class MainForm : Form, ILocalizable
         _settings.Normalize(); // dedupe + cap at 5
         _settings.Save();
         UpdateProcOpsUi(_sampler.Processes?.State ?? ProcessMonitorState.Stopped, force: true);
+        AskElevateIfNeeded();
+    }
+
+    /// <summary>Asks (modal dialog) whether to relaunch elevated for process monitoring.</summary>
+    private void AskElevateIfNeeded()
+    {
+        var state = _sampler.Processes?.State ?? ProcessMonitorState.Stopped;
+        int count = _settings.ProcessMonitors.Count;
+        if (count == 0 || state == ProcessMonitorState.Running) return;
+
+        using var prompt = new AdminPromptDialog();
+        if (prompt.ShowDialog(this) == DialogResult.Yes)
+            RequestRestartElevated?.Invoke();
     }
 
     private void RemoveProcess(string name)
@@ -273,22 +312,22 @@ public sealed class MainForm : Form, ILocalizable
     private void UpdateMeasurementUi()
     {
         bool measuring = _sampler.Measuring;
-        _btnMeasStart.Enabled = !measuring;
-        _btnMeasStop.Enabled = measuring;
+        _swStart.Enabled = !measuring;
+        _swStop.Enabled = measuring;
 
         if (measuring)
         {
             var span = DateTime.Now - _sampler.MeasurementStart;
-            _measLabel.Text = Loc.T("sw.running",
+            _swStatus.Text = Loc.T("sw.running",
                 span.ToString(@"hh\:mm\:ss"),
                 FormatUtil.Bytes(_sampler.MeasurementRx),
                 FormatUtil.Bytes(_sampler.MeasurementTx));
-            _measLabel.Visible = true;
+            _swStatus.Visible = true;
         }
-        else if (_measLabel.Text.Length > 0)
+        else if (_swStatus.Text.Length > 0)
         {
-            _measLabel.Text = "";
-            _measLabel.Visible = false;
+            _swStatus.Text = "";
+            _swStatus.Visible = false;
         }
     }
 

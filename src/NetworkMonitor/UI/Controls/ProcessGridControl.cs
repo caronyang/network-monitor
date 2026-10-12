@@ -4,11 +4,11 @@ namespace NetworkMonitor.UI.Controls;
 
 /// <summary>
 /// Owner-drawn list of monitored processes - same visual language as the interface grid:
-/// status dot, live down/up with relative bars, today and session totals. Each row has a
-/// small × button (and a right-click menu) to remove the process from monitoring.
-/// Rows only exist while the user has picked processes, so the control is never scrolled.
+/// a status color block at the row start (doubles as the remove trigger, with hand cursor
+/// + hover highlight), live down/up with relative bars, today and session totals.
+/// Scrolls when five rows do not fit into the space the main window can spare.
 /// </summary>
-public sealed class ProcessGridControl : Control
+public sealed class ProcessGridControl : ScrollableControl
 {
     private static readonly Color HeaderBack = Color.FromArgb(241, 244, 248);
     private static readonly Color HeaderText = Color.FromArgb(96, 110, 125);
@@ -21,7 +21,6 @@ public sealed class ProcessGridControl : Control
     private static readonly Color TrackColor = Color.FromArgb(226, 232, 240);
     private static readonly Color RunningColor = Color.FromArgb(46, 184, 92);
     private static readonly Color StoppedColor = Color.FromArgb(176, 185, 195);
-    private static readonly Color CloseColor = Color.FromArgb(150, 160, 172);
 
     private static readonly SolidBrush AltBrush = new(RowAlt);
     private static readonly SolidBrush HeaderBrush = new(HeaderBack);
@@ -31,7 +30,6 @@ public sealed class ProcessGridControl : Control
     private static readonly SolidBrush RunningBrush = new(RunningColor);
     private static readonly SolidBrush StoppedBrush = new(StoppedColor);
     private static readonly Pen RowPen = new(RowLine, 1f);
-    private static readonly Pen ClosePen = new(Color.FromArgb(120, 130, 142), 1.4f);
 
     private IReadOnlyList<ProcInfo> _items = Array.Empty<ProcInfo>();
     private IReadOnlyDictionary<string, DayTotal> _today = new Dictionary<string, DayTotal>();
@@ -40,7 +38,12 @@ public sealed class ProcessGridControl : Control
     private Font? _boldFont;
     private readonly ContextMenuStrip _menu = new();
     private string? _menuTarget;
-    private readonly Rectangle[] _closeRects = new Rectangle[8];
+    private readonly Rectangle[] _blockRects = new Rectangle[8];
+    private int _hoverBlock = -1;
+    private ToolTip _tooltip = new();
+
+    /// <summary>Rows visible at once; additional rows scroll.</summary>
+    public const int VisibleRowCap = 3;
 
     /// <summary>Raised with the canonical process name when the user removes one.</summary>
     public event Action<string>? RemoveRequested;
@@ -50,6 +53,7 @@ public sealed class ProcessGridControl : Control
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
         BackColor = Color.White;
+        AutoScroll = true;
         Font = new Font("Segoe UI", 9f);
 
         _menu.ShowImageMargin = false;
@@ -65,6 +69,8 @@ public sealed class ProcessGridControl : Control
             item.Text = Loc.T("proc.remove");
             item.Enabled = _menuTarget is not null;
         };
+
+        _tooltip.SetToolTip(this, Loc.T("proc.removeBlock"));
     }
 
     protected override void Dispose(bool disposing)
@@ -73,13 +79,17 @@ public sealed class ProcessGridControl : Control
         {
             _boldFont?.Dispose();
             _menu.Dispose();
+            _tooltip.Dispose();
         }
 
         base.Dispose(disposing);
     }
 
-    /// <summary>Preferred height for the current number of rows (used by MainForm).</summary>
-    public int ContentHeight => _headerHeight + Math.Max(1, _items.Count) * _rowHeight + 4;
+    /// <summary>
+    /// Height the main window should give the control: header + up to <see cref="VisibleRowCap"/>
+    /// rows + margin. Additional rows become a scrollbar.
+    /// </summary>
+    public int ContentHeight => _headerHeight + Math.Min(Math.Max(1, _items.Count), VisibleRowCap) * _rowHeight + 4;
 
     /// <summary>Bold font shared by every row - created once instead of on every paint.</summary>
     private Font BoldFont => _boldFont ??= new Font(Font, FontStyle.Bold);
@@ -89,6 +99,7 @@ public sealed class ProcessGridControl : Control
         bool changed = HasChanged(items, today);
         _items = items;
         _today = today;
+        UpdateScrollSize();
         if (changed) Invalidate();
     }
 
@@ -109,6 +120,12 @@ public sealed class ProcessGridControl : Control
         return false;
     }
 
+    private void UpdateScrollSize()
+    {
+        int needed = _headerHeight + Math.Max(1, _items.Count) * _rowHeight + 4;
+        AutoScrollMinSize = new Size(0, Math.Max(0, needed - ClientSize.Height));
+    }
+
     protected override void OnFontChanged(EventArgs e)
     {
         base.OnFontChanged(e);
@@ -116,7 +133,14 @@ public sealed class ProcessGridControl : Control
         _boldFont = null;
         _rowHeight = Math.Max(44, Font.Height * 2 + 12);
         _headerHeight = Math.Max(26, Font.Height + 14);
+        UpdateScrollSize();
         Invalidate();
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        UpdateScrollSize();
     }
 
     protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -128,12 +152,12 @@ public sealed class ProcessGridControl : Control
     {
         var g = e.Graphics;
         g.Clear(BackColor);
+        g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
 
-        int width = ClientSize.Width;
+        int width = ClientSize.Width - (VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0);
         if (width < 50) return;
 
-        var cols = Columns(width, StatusDotSize);
-        DrawHeader(g, width, cols);
+        var cols = Columns(width);        DrawHeader(g, width, cols);
 
         if (_items.Count == 0)
         {
@@ -151,19 +175,21 @@ public sealed class ProcessGridControl : Control
         }
 
         int y = _headerHeight;
-        for (int i = 0; i < _items.Count && i < _closeRects.Length; i++)
+        for (int i = 0; i < _items.Count && i < _blockRects.Length; i++)
         {
             DrawRow(g, _items[i], i, y, width, maxRate, cols);
             y += _rowHeight;
         }
     }
 
-    private int StatusDotSize => Math.Max(7, Font.Height - 6);
+    private int BlockHeight => Math.Max(8, Font.Height - 5);
 
-    private static int[] Columns(int width, int dotSize)
+    private int BlockWidth => BlockHeight * 2;
+
+    private int[] Columns(int width)
     {
         // name | down | up | today | session  -> 6 boundaries
-        int x0 = 6 + dotSize + 6;
+        int x0 = 8 + BlockWidth + 6;
         int b1 = x0 + (int)(width * 0.25);
         int b2 = b1 + (int)(width * 0.19);
         int b3 = b2 + (int)(width * 0.18);
@@ -203,7 +229,7 @@ public sealed class ProcessGridControl : Control
 
         // ---- name + running state ----
         string display = item.Name + ".exe";
-        int nameRight = cols[1] - 8 - 20; // leave room for the × button
+        int nameRight = cols[1] - 8;
         TextRenderer.DrawText(g, display, BoldFont, new Rectangle(cols[0], textTop, Math.Max(20, nameRight - cols[0]), textH),
             NameColor, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
@@ -211,21 +237,21 @@ public sealed class ProcessGridControl : Control
         TextRenderer.DrawText(g, status, Font, new Rectangle(cols[0], textTop + textH, Math.Max(20, nameRight - cols[0]), textH),
             SubColor, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
-        int dotSize = StatusDotSize;
-        g.FillEllipse(item.Running ? RunningBrush : StoppedBrush,
-            6, y + (h - dotSize) / 2, dotSize, dotSize);
+        // ---- status/remove block (row start, short+wide; click removes) ----
+        int bw = BlockWidth, bh = BlockHeight;
+        var block = new Rectangle(6, y + (h - bh) / 2, bw, bh);
+        _blockRects[index] = block;
 
-        // ---- × button (remove) ----
-        int boxSize = Math.Max(18, Font.Height + 6);
-        var closeRect = new Rectangle(cols[1] - 8 - boxSize, y + (h - boxSize) / 2, boxSize, boxSize);
-        _closeRects[index] = Rectangle.Inflate(closeRect, 2, 2);
-        var inner = new RectangleF(closeRect.X + 5, closeRect.Y + 5, closeRect.Width - 10, closeRect.Height - 10);
-        using (var pen = new Pen(CloseColor, 1.4f))
+        bool hovered = index == _hoverBlock;
+        var blockColor = item.Running ? RunningColor : StoppedColor;
+        if (hovered)
+            blockColor = Color.FromArgb(Math.Min(255, blockColor.R + 45), Math.Min(255, blockColor.G + 45), blockColor.B);
+        using (var b = new SolidBrush(blockColor))
+            g.FillRectangle(b, block);
+        if (hovered)
         {
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.DrawLine(pen, inner.X, inner.Y, inner.Right, inner.Bottom);
-            g.DrawLine(pen, inner.Right, inner.Y, inner.X, inner.Bottom);
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+            using var pen = new Pen(Color.FromArgb(190, 60, 60), 1.4f);
+            g.DrawRectangle(pen, block.X - 2, block.Y - 2, block.Width + 4, block.Height + 4);
         }
 
         // ---- rates + bars ----
@@ -269,33 +295,65 @@ public sealed class ProcessGridControl : Control
             TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
     }
 
+    private Point ContentPoint(Point viewportPoint) =>
+        new(viewportPoint.X - AutoScrollPosition.X, viewportPoint.Y - AutoScrollPosition.Y);
+
+    private int RowIndexAt(int contentY)
+    {
+        if (contentY < _headerHeight) return -1;
+        int idx = (contentY - _headerHeight) / _rowHeight;
+        return idx >= 0 && idx < _items.Count ? idx : -1;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        var cp = ContentPoint(e.Location);
+        int idx = RowIndexAt(cp.Y);
+        bool onBlock = idx >= 0 && idx < _blockRects.Length && _blockRects[idx].Contains(cp);
+        int next = onBlock ? idx : -1;
+        if (next != _hoverBlock)
+        {
+            _hoverBlock = next;
+            Invalidate();
+        }
+
+        Cursor = onBlock ? Cursors.Hand : Cursors.Default;
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        if (_hoverBlock != -1)
+        {
+            _hoverBlock = -1;
+            Invalidate();
+        }
+
+        Cursor = Cursors.Default;
+    }
+
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
+        var cp = ContentPoint(e.Location);
 
         if (e.Button == MouseButtons.Left)
         {
-            for (int i = 0; i < _items.Count && i < _closeRects.Length; i++)
+            int idx = RowIndexAt(cp.Y);
+            if (idx >= 0 && idx < _blockRects.Length && _blockRects[idx].Contains(cp))
             {
-                if (_closeRects[i].Contains(e.Location))
-                {
-                    RemoveRequested?.Invoke(_items[i].Name);
-                    return;
-                }
+                RemoveRequested?.Invoke(_items[idx].Name);
+                return;
             }
         }
         else if (e.Button == MouseButtons.Right)
         {
-            int idx = RowIndexAt(e.Y);
+            int idx = RowIndexAt(cp.Y);
             _menuTarget = idx >= 0 ? _items[idx].Name : null;
             if (_menuTarget is not null) _menu.Show(this, e.Location);
         }
     }
 
-    private int RowIndexAt(int y)
-    {
-        if (y < _headerHeight) return -1;
-        int idx = (y - _headerHeight) / _rowHeight;
-        return idx >= 0 && idx < _items.Count ? idx : -1;
-    }
 }
+

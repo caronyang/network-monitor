@@ -30,13 +30,13 @@ switchable at runtime.
 
 ## Screenshots
 
-| Statistics (English) | Floating panel |
+| Main window (v1.1) | Floating panel (v1.1) |
 |---|---|
-| ![Statistics](screenshots/stats-en.png) | ![Floating panel](screenshots/panel.png) |
+| ![Main window](screenshots/main.png) | ![Floating panel](screenshots/panel.png) |
 
-| Statistics (繁體中文) | |
+| Statistics (English) | Statistics (繁體中文) |
 |---|---|
-| ![Statistics ZH](screenshots/stats-zh.png) | |
+| ![Statistics](screenshots/stats-en.png) | ![Statistics ZH](screenshots/stats-zh.png) |
 
 ## Requirements
 
@@ -75,18 +75,25 @@ output folder. Both scripts accept `x64` or `x86` as an argument (default `x64`)
 
 ### Main window
 
-- **Toolbar**: `Statistics` opens the charts, `Settings` opens preferences,
-  `⏱ Start` / `⏹ Stop` run the **traffic stopwatch**.
+- **Toolbar**: `Statistics` opens the charts, `Settings` opens preferences.
 - **Dark summary bar**: total live rate, **Today** (daily total, refreshed from the
   database every 45 s) and **Session** (since app start).
 - **Process ops row** (v1.1): `Monitored processes (n/5)` + `Add…` (lists running
-  processes to add); when not elevated it shows a red hint and a
-  "Restart as administrator" button.
+  processes to add); when not elevated a compact `⚠ Needs administrator` hint appears —
+  clicking it opens a dialog that offers to restart elevated.
 - **Process grid** (v1.1, shown while ≥1 process is monitored): one row per process
   (`chrome.exe`…), running state, live download/upload with bars, today and session
-  totals. The **×** at each row's edge (or the row's context menu) removes it.
-- **Interface grid**: each row shows the interface name, link status and link speed,
-  live download/upload rates with relative progress bars, and today/session totals.
+  totals. Every row starts with a **small color block** (green = running, gray = stopped)
+  which is the remove trigger for processes (hand cursor, hover highlight, × has moved
+  there); the interface grid uses the same block design, but there it only shows the
+  connection state and is not clickable. The list **scrolls** when five rows do not fit.
+- **Interface grid**: each row also starts with the same short color block showing the
+  connection state (green = connected, gray = disconnected), followed by the interface
+  name, link speed, live download/upload rates with relative progress bars, and
+  today/session totals.
+- **Stopwatch bar** (v1.1, window bottom): `⏱ Start` / `⏹ Stop` live here; while a
+  measurement runs the bar shows the elapsed time and the live totals
+  (`⏱ 00:00:37 ↓ 4.7 MB ↑ 210 KB`).
 
 ### System tray
 

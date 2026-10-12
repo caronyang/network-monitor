@@ -133,7 +133,7 @@ public sealed class InterfaceGridControl : ScrollableControl
         int width = ClientSize.Width - (VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0);
         if (width < 50) width = ClientSize.Width;
 
-        var cols = Columns(width, StatusDotSize);
+        var cols = Columns(width);
         DrawHeader(g, width, cols);
 
         if (_items.Count == 0)
@@ -157,13 +157,15 @@ public sealed class InterfaceGridControl : ScrollableControl
         }
     }
 
-    /// <summary>Left gutter for the status dot: 6 px margin on each side of the dot.</summary>
-    private int StatusDotSize => Math.Max(7, Font.Height - 6);
+    /// <summary>Left gutter for the status block: 6 px margin on each side.</summary>
+    private int StatusBlockHeight => Math.Max(8, Font.Height - 5);
 
-    private static int[] Columns(int width, int dotSize)
+    private int StatusBlockWidth => Math.Max(16, StatusBlockHeight * 2);
+
+    private int[] Columns(int width)
     {
         // name | down | up | today | session  -> 6 boundaries
-        int x0 = 6 + dotSize + 6;
+        int x0 = 8 + StatusBlockWidth + 6;
         int b1 = x0 + (int)(width * 0.25);
         int b2 = b1 + (int)(width * 0.19);
         int b3 = b2 + (int)(width * 0.18);
@@ -220,10 +222,11 @@ public sealed class InterfaceGridControl : ScrollableControl
         TextRenderer.DrawText(g, sub, Font, new Rectangle(cols[0], textTop + textH, cols[1] - cols[0] - 8, textH),
             SubColor, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
 
-        // status dot (fixed 6 px margin from the left edge, DPI-aware size)
-        int dotSize = StatusDotSize;
-        g.FillEllipse(item.Connected ? ConnectedBrush : DisconnectedBrush,
-            6, y + (h - dotSize) / 2, dotSize, dotSize);
+        // status block (short-wide color block, same geometry as the process grid's remove
+        // trigger; here it is display-only and shows the connected state)
+        int bw = StatusBlockWidth, bh = StatusBlockHeight;
+        g.FillRectangle(item.Connected ? ConnectedBrush : DisconnectedBrush,
+            6, y + (h - bh) / 2, bw, bh);
 
         // ---- rates + bars ----
         DrawRateCell(g, item.RxRate, cols[1], cols[2], textTop, textH, y, h, DownBrush, DownColor, maxRate, item.Speed);
