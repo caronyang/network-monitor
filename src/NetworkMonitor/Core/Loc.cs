@@ -129,6 +129,8 @@ public static class Loc
         ["sw.start"] = ("⏱ Start", "⏱ 開始統計"),
         ["sw.stop"] = ("⏹ Stop", "⏹ 停止統計"),
         ["sw.title"] = ("Stopwatch", "碼表統計"),
+        ["sw.running"] = ("Running {0} — downloaded {1}, uploaded {2}",
+                          "統計中 {0} — 已下載 {1}，已上傳 {2}"),
         ["sw.tip"] = ("Traffic stopwatch: totals all traffic between Start and Stop",
                       "流量碼表：統計開始到停止之間的全部傳輸量"),
         ["common.later"] = ("Not now", "暫時不要"),

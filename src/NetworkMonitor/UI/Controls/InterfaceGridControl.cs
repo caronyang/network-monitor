@@ -48,7 +48,6 @@ public sealed class InterfaceGridControl : ScrollableControl
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
         BackColor = Color.White;
-        AutoScroll = true;
         Font = new Font("Segoe UI", 9f);
     }
 
@@ -68,9 +67,16 @@ public sealed class InterfaceGridControl : ScrollableControl
         bool changed = HasChanged(items, today);
         _items = items;
         _today = today;
-        UpdateScrollSize();
+
+        // the control always spans the full content; the hosting AutoScroll panel scrolls
+        int h = ContentHeight;
+        if (Height != h) Height = h;
+
         if (changed && !DebugFlags.NoPaintGrid) Invalidate();
     }
+
+    /// <summary>Full content height (the hosting AutoScroll panel scrolls over it).</summary>
+    public int ContentHeight => _headerHeight + Math.Max(1, _items.Count) * _rowHeight + 4;
 
     /// <summary>
     /// The sampler hands out fresh objects every second, so repaint only when the values
@@ -96,12 +102,6 @@ public sealed class InterfaceGridControl : ScrollableControl
         return false;
     }
 
-    private void UpdateScrollSize()
-    {
-        int needed = _headerHeight + _items.Count * _rowHeight + 4;
-        AutoScrollMinSize = new Size(0, Math.Max(0, needed - ClientSize.Height));
-    }
-
     protected override void OnFontChanged(EventArgs e)
     {
         base.OnFontChanged(e);
@@ -109,14 +109,8 @@ public sealed class InterfaceGridControl : ScrollableControl
         _boldFont = null;
         _rowHeight = Math.Max(44, Font.Height * 2 + 12);
         _headerHeight = Math.Max(26, Font.Height + 14);
-        UpdateScrollSize();
+        Height = ContentHeight;
         Invalidate();
-    }
-
-    protected override void OnResize(EventArgs e)
-    {
-        base.OnResize(e);
-        UpdateScrollSize();
     }
 
     protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -128,10 +122,9 @@ public sealed class InterfaceGridControl : ScrollableControl
     {
         var g = e.Graphics;
         g.Clear(BackColor);
-        g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
 
-        int width = ClientSize.Width - (VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0);
-        if (width < 50) width = ClientSize.Width;
+        int width = ClientSize.Width;
+        if (width < 50) return;
 
         var cols = Columns(width);
         DrawHeader(g, width, cols);

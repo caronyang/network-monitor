@@ -25,7 +25,9 @@ public sealed class MainForm : Form, ILocalizable
     private readonly Button _btnAddProc = new();
     private readonly Label _hintAdmin = new();
     private readonly ProcessGridControl _procGrid = new();
+    private readonly Panel _procHost = new();
     private readonly InterfaceGridControl _grid = new();
+    private readonly Panel _gridHost = new();
     private readonly ToolTip _tooltips = new();
     private readonly Panel _swBar = new();
     private readonly Label _swTitle = new();
@@ -44,23 +46,32 @@ public sealed class MainForm : Form, ILocalizable
     /// <summary>Raised when the user asks to relaunch the app elevated (process monitoring needs admin).</summary>
     public event Action? RequestRestartElevated;
 
+    private readonly int _initialW;
+    private readonly int _initialH;
+
     public MainForm(AppSettings settings, TrafficDatabase db, NetworkSampler sampler)
     {
         _settings = settings;
         _db = db;
         _sampler = sampler;
 
+        // Capture the intended size before any layout pass can overwrite it through OnResize
+        // (the first layout/auto-scale pass clamps the form to MinimumSize).
+        _initialW = Math.Max(720, _settings.MainWidth ?? 720);
+        _initialH = Math.Max(526, _settings.MainHeight ?? 526);
+
         SuspendLayout();
 
         Name = "MainForm";
         Text = Loc.T("main.title");
-        MinimumSize = new Size(720, 480);
+        // 720x526 = the v1.1.1 minimum plus one list row (~46 px) so the interface list
+        // shows noticeably more entries by default.
+        MinimumSize = new Size(720, 526);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.White;
         ShowInTaskbar = true;
 
-        if (_settings.MainWidth is int w && _settings.MainHeight is int h && w >= 720 && h >= 480)
-            Size = new Size(w, h);
+        Size = new Size(_initialW, _initialH);
 
         // ---- toolbar ----
         _toolbar.Dock = DockStyle.Top;
@@ -136,10 +147,18 @@ public sealed class MainForm : Form, ILocalizable
         _procOps.Controls.Add(opsFlow);
 
         // ---- process grid (only visible while something is monitored) ----
+        // The grid itself is never scrolled: it spans the full content height inside an
+        // AutoScroll host, so scrolling moves a child control instead of blitting an
+        // owner-drawn surface (which would smear the rows).
+        _procHost.Dock = DockStyle.Top;
+        _procHost.AutoScroll = true;
+        _procHost.BackColor = Color.White;
+        _procHost.Visible = false;
+        _procHost.Height = 0;
+
         _procGrid.Dock = DockStyle.Top;
-        _procGrid.Visible = false;
-        _procGrid.Height = 0;
         _procGrid.RemoveRequested += RemoveProcess;
+        _procHost.Controls.Add(_procGrid);
 
         // ---- traffic stopwatch bottom bar ----
         _swBar.Dock = DockStyle.Bottom;
@@ -180,11 +199,15 @@ public sealed class MainForm : Form, ILocalizable
         _swBar.Controls.Add(swFlow);
 
         // ---- grid ----
-        _grid.Dock = DockStyle.Fill;
+        _gridHost.Dock = DockStyle.Fill;
+        _gridHost.AutoScroll = true;
+        _gridHost.BackColor = Color.White;
+        _grid.Dock = DockStyle.Top;
+        _gridHost.Controls.Add(_grid);
 
-        Controls.Add(_grid);
+        Controls.Add(_gridHost);
         Controls.Add(_swBar);
-        Controls.Add(_procGrid);
+        Controls.Add(_procHost);
         Controls.Add(_procOps);
         Controls.Add(_summary);
         Controls.Add(_toolbar);
@@ -251,14 +274,18 @@ public sealed class MainForm : Form, ILocalizable
         _procTitle.Text = Loc.T("proc.count", n, AppSettings.MaxProcessMonitors);
 
         bool gridVisible = n > 0;
-        if (gridVisible != _procGrid.Visible)
+        if (gridVisible != _procHost.Visible)
         {
-            _procGrid.Visible = gridVisible;
-            _procGrid.Height = gridVisible ? Math.Max(_procGrid.ContentHeight, 60) : 0;
+            _procHost.Visible = gridVisible;
+            if (!gridVisible) _procHost.Height = 0;
         }
-        else if (gridVisible && (force || n != _lastProcCount))
+
+        if (gridVisible)
         {
-            _procGrid.Height = Math.Max(_procGrid.ContentHeight, 60);
+            int rows = Math.Min(n, ProcessGridControl.VisibleRowCap);
+            int viewport = _procGrid.HeightForRows(rows);
+            if (_procHost.Height != viewport) _procHost.Height = viewport;
+            else if (force) _procGrid.Invalidate();
         }
         // admin hint shows when names are monitored but the ETW session cannot run;
         // clicking it opens the elevation question dialog
@@ -375,6 +402,14 @@ public sealed class MainForm : Form, ILocalizable
                 _todayQueryRunning = false;
             }
         });
+    }
+
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        // Applied here (not in the constructor) because the first layout pass would clamp
+        // a constructor-set Size while the handle does not exist yet.
+        Size = new Size(_initialW, _initialH);
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

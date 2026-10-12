@@ -6,9 +6,11 @@ namespace NetworkMonitor.UI.Controls;
 /// Owner-drawn list of monitored processes - same visual language as the interface grid:
 /// a status color block at the row start (doubles as the remove trigger, with hand cursor
 /// + hover highlight), live down/up with relative bars, today and session totals.
-/// Scrolls when five rows do not fit into the space the main window can spare.
+/// The control is never scrolled itself; the main window hosts it inside an AutoScroll
+/// panel and sizes it to the full content height, which avoids the scroll-blit artefacts
+/// of scrolling a fully owner-drawn surface.
 /// </summary>
-public sealed class ProcessGridControl : ScrollableControl
+public sealed class ProcessGridControl : Control
 {
     private static readonly Color HeaderBack = Color.FromArgb(241, 244, 248);
     private static readonly Color HeaderText = Color.FromArgb(96, 110, 125);
@@ -42,8 +44,8 @@ public sealed class ProcessGridControl : ScrollableControl
     private int _hoverBlock = -1;
     private ToolTip _tooltip = new();
 
-    /// <summary>Rows visible at once; additional rows scroll.</summary>
-    public const int VisibleRowCap = 3;
+    /// <summary>Rows visible at once inside the hosting AutoScroll panel; the rest scrolls.</summary>
+    public const int VisibleRowCap = 2;
 
     /// <summary>Raised with the canonical process name when the user removes one.</summary>
     public event Action<string>? RemoveRequested;
@@ -53,7 +55,6 @@ public sealed class ProcessGridControl : ScrollableControl
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
                  ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
         BackColor = Color.White;
-        AutoScroll = true;
         Font = new Font("Segoe UI", 9f);
 
         _menu.ShowImageMargin = false;
@@ -85,11 +86,11 @@ public sealed class ProcessGridControl : ScrollableControl
         base.Dispose(disposing);
     }
 
-    /// <summary>
-    /// Height the main window should give the control: header + up to <see cref="VisibleRowCap"/>
-    /// rows + margin. Additional rows become a scrollbar.
-    /// </summary>
-    public int ContentHeight => _headerHeight + Math.Min(Math.Max(1, _items.Count), VisibleRowCap) * _rowHeight + 4;
+    /// <summary>Full content height (the hosting AutoScroll panel scrolls over it).</summary>
+    public int ContentHeight => _headerHeight + Math.Max(1, _items.Count) * _rowHeight + 4;
+
+    /// <summary>Viewport height that shows at most <paramref name="rows"/> rows.</summary>
+    public int HeightForRows(int rows) => _headerHeight + Math.Max(1, rows) * _rowHeight + 4;
 
     /// <summary>Bold font shared by every row - created once instead of on every paint.</summary>
     private Font BoldFont => _boldFont ??= new Font(Font, FontStyle.Bold);
@@ -99,7 +100,11 @@ public sealed class ProcessGridControl : ScrollableControl
         bool changed = HasChanged(items, today);
         _items = items;
         _today = today;
-        UpdateScrollSize();
+
+        // the control always spans the full content; the AutoScroll host provides the viewport
+        int h = ContentHeight;
+        if (Height != h) Height = h;
+
         if (changed) Invalidate();
     }
 
@@ -120,12 +125,6 @@ public sealed class ProcessGridControl : ScrollableControl
         return false;
     }
 
-    private void UpdateScrollSize()
-    {
-        int needed = _headerHeight + Math.Max(1, _items.Count) * _rowHeight + 4;
-        AutoScrollMinSize = new Size(0, Math.Max(0, needed - ClientSize.Height));
-    }
-
     protected override void OnFontChanged(EventArgs e)
     {
         base.OnFontChanged(e);
@@ -133,14 +132,8 @@ public sealed class ProcessGridControl : ScrollableControl
         _boldFont = null;
         _rowHeight = Math.Max(44, Font.Height * 2 + 12);
         _headerHeight = Math.Max(26, Font.Height + 14);
-        UpdateScrollSize();
+        Height = ContentHeight;
         Invalidate();
-    }
-
-    protected override void OnResize(EventArgs e)
-    {
-        base.OnResize(e);
-        UpdateScrollSize();
     }
 
     protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -152,12 +145,12 @@ public sealed class ProcessGridControl : ScrollableControl
     {
         var g = e.Graphics;
         g.Clear(BackColor);
-        g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
 
-        int width = ClientSize.Width - (VerticalScroll.Visible ? SystemInformation.VerticalScrollBarWidth : 0);
+        int width = ClientSize.Width;
         if (width < 50) return;
 
-        var cols = Columns(width);        DrawHeader(g, width, cols);
+        var cols = Columns(width);
+        DrawHeader(g, width, cols);
 
         if (_items.Count == 0)
         {
@@ -295,9 +288,6 @@ public sealed class ProcessGridControl : ScrollableControl
             TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPadding);
     }
 
-    private Point ContentPoint(Point viewportPoint) =>
-        new(viewportPoint.X - AutoScrollPosition.X, viewportPoint.Y - AutoScrollPosition.Y);
-
     private int RowIndexAt(int contentY)
     {
         if (contentY < _headerHeight) return -1;
@@ -308,7 +298,7 @@ public sealed class ProcessGridControl : ScrollableControl
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        var cp = ContentPoint(e.Location);
+        var cp = e.Location;
         int idx = RowIndexAt(cp.Y);
         bool onBlock = idx >= 0 && idx < _blockRects.Length && _blockRects[idx].Contains(cp);
         int next = onBlock ? idx : -1;
@@ -336,7 +326,7 @@ public sealed class ProcessGridControl : ScrollableControl
     protected override void OnMouseDown(MouseEventArgs e)
     {
         base.OnMouseDown(e);
-        var cp = ContentPoint(e.Location);
+        var cp = e.Location;
 
         if (e.Button == MouseButtons.Left)
         {

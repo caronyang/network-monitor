@@ -334,7 +334,13 @@ public sealed class FloatingPanel : Form, ILocalizable
         public int ContentHeight =>
             _items.Count == 0
                 ? 0
-                : _items.Count * RowHeight + (NeedsHint ? HintHeight : 0);
+                : _items.Count * RowHeight + (NeedsHint ? HintHeight : 0) + BottomPad;
+
+        /// <summary>Top offset of the first row plus the trailing gap below the last row.</summary>
+        private const int TopPad = 4;
+
+        /// <summary>Trailing space so the last row keeps a margin from the rounded bottom edge.</summary>
+        private const int BottomPad = 8;
 
         private bool NeedsHint => _items.Count > 0 && _state != ProcessMonitorState.Running;
 
@@ -380,7 +386,7 @@ public sealed class FloatingPanel : Form, ILocalizable
             g.Clear(BackColor);
             if (_items.Count == 0) return;
 
-            int y = 2;
+            int y = TopPad;
             if (NeedsHint)
             {
                 var hintRect = new Rectangle(12, y, Width - 20, HintHeight - 3);

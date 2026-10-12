@@ -11,6 +11,13 @@ single executable, low CPU and memory usage, logging per-interface traffic to SQ
 built-in line/bar chart statistics. UI available in English and Traditional Chinese,
 switchable at runtime.
 
+**Highlights (v1.1): per-application throughput monitoring** — pick up to five running
+programs (e.g. `chrome.exe`) and watch **and record** their download/upload throughput:
+live rates, today's and session totals in the main window, per-minute rows in the same
+SQLite database (queryable in the statistics charts), and a compact block per program in
+the floating panel. The exact per-process counts come from the Windows kernel ETW network
+provider (TCP + UDP, IPv4 + IPv6, including QUIC/HTTP3) and require administrator rights.
+
 ![Main window](screenshots/main.png)
 
 ## Features
@@ -25,12 +32,12 @@ switchable at runtime.
 | Startup | One-click "run at logon" via the `HKCU\...\Run` registry value |
 | Languages | English / 繁體中文 switch instantly from the tray menu or Settings, no restart needed |
 | Low resource | See the [Performance](#performance) section |
-| **Process monitoring** (v1.1) | Per-second byte counts **for chosen applications** (e.g. chrome.exe): a process list in the main window (status, live rates, today/session totals), up to 5 processes. Data is stored in the same SQLite tables under `P:<name>` keys (one row per minute) and the statistics "Interface" dropdown lists each process directly. **Needs admin rights** (ETW `Microsoft-Windows-Kernel-Network`, exact TCP+UDP/IPv4+IPv6 counting); without elevation everything else keeps working and the UI shows a hint |
-| **Traffic stopwatch** (v1.1) | Toolbar `⏱ Start` / `⏹ Stop`: accumulates total down/up traffic between the two clicks and writes the result to SQLite; the statistics window lists all records (start / end / duration / download / upload) with the same retention |
+| **Process monitoring** (v1.1) | **Monitor and record per-application throughput**: pick up to 5 running programs (e.g. `chrome.exe`) and see live download/upload, today and session totals. One row per process per minute is stored in the same SQLite database (keys `P:<name>`) and the statistics "Interface" dropdown lists each process for charts/CSV. **Requires administrator rights** (ETW `Microsoft-Windows-Kernel-Network`: exact TCP+UDP / IPv4+IPv6 counting); without elevation the app keeps working and shows a hint |
+| **Traffic stopwatch** (v1.1) | Stopwatch bar at the **bottom of the main window** (`⏱ Start` / `⏹ Stop`): accumulates total down/up traffic between the two clicks and writes the result to SQLite; while running it shows a plain-language status with the live totals; the statistics window lists all records (start / end / duration / download / upload) with the same retention |
 
 ## Screenshots
 
-| Main window (v1.1) | Floating panel (v1.1) |
+| Main window | Floating panel |
 |---|---|
 | ![Main window](screenshots/main.png) | ![Floating panel](screenshots/panel.png) |
 
@@ -50,7 +57,7 @@ switchable at runtime.
 
 ### Installer (recommended)
 
-1. Download `NetworkMonitor-1.1.1-x64-setup.exe` from the
+1. Download `NetworkMonitor-1.1.2-x64-setup.exe` from the
    [Releases](https://github.com/caronyang/network-monitor/releases) page
    (use `-x86-setup.exe` for 32-bit systems)
 2. Run it. The installer offers:
@@ -63,7 +70,7 @@ switchable at runtime.
 
 ### Portable
 
-Download `NetworkMonitor-1.1.1-portable-x64.zip` from the
+Download `NetworkMonitor-1.1.2-portable-x64.zip` from the
 [Releases](https://github.com/caronyang/network-monitor/releases) page, extract it and
 run `NetworkMonitor.exe` (requires the .NET 10 Desktop Runtime).
 
@@ -84,16 +91,17 @@ output folder. Both scripts accept `x64` or `x86` as an argument (default `x64`)
 - **Process grid** (v1.1, shown while ≥1 process is monitored): one row per process
   (`chrome.exe`…), running state, live download/upload with bars, today and session
   totals. Every row starts with a **small color block** (green = running, gray = stopped)
-  which is the remove trigger for processes (hand cursor, hover highlight, × has moved
-  there); the interface grid uses the same block design, but there it only shows the
-  connection state and is not clickable. The list **scrolls** when five rows do not fit.
+  which is the remove trigger for processes (hand cursor, hover highlight); the interface
+  grid uses the same block design, but there it only shows the connection state and is not
+  clickable. **Two rows are always visible and additional rows scroll** in place, so all
+  five monitored programs stay reachable.
 - **Interface grid**: each row also starts with the same short color block showing the
   connection state (green = connected, gray = disconnected), followed by the interface
   name, link speed, live download/upload rates with relative progress bars, and
-  today/session totals.
+  today/session totals; the list **scrolls** when it does not fit.
 - **Stopwatch bar** (v1.1, window bottom): `⏱ Start` / `⏹ Stop` live here; while a
-  measurement runs the bar shows the elapsed time and the live totals
-  (`⏱ 00:00:37 ↓ 4.7 MB ↑ 210 KB`).
+  measurement runs the bar shows a plain-language status with the live totals
+  (`Running 00:00:37 — downloaded 4.7 MB, uploaded 210 KB`).
 
 ### System tray
 
@@ -216,7 +224,8 @@ dotnet run --project src\NetworkMonitor -c Release
 | `ApiDump\` | Windows API struct field dump (development) |
 | `ApiIntrospect\` | ScottPlot API reflection explorer |
 | `shot.ps1` `shoth.ps1` `shotpw.ps1` `opengraphics.ps1` | UI screenshots (`shotpw` uses PrintWindow, unaffected by occlusion) |
-| `enumwin.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | window enumeration / button clicks / element dumps / checkbox & combo operations (testing) |
+| `enumwin.ps1` `winfinder.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | window enumeration (`winfinder` prints handle/size/title per PID) / button clicks / element dumps / checkbox & combo operations (testing) |
+| `capture_hwnd.ps1` | save a screenshot of any window handle (works across integrity levels) |
 | `clickbtn.ps1` | click a window button by index (language-agnostic) |
 | `asciiart.ps1` `rawprof.ps1` `textink.ps1` `pixcheck.ps1` `measuretext.ps1` | pixel verification: region→ASCII / row ink profile / button text position / grid spacing / TextRenderer measurement |
 | `dumpstat.py` | parse `uidump.ps1` output |

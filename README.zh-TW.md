@@ -10,6 +10,12 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 將每個網路介面的上下傳量記錄到 SQLite，並內建折線圖／直條圖統計面板。
 介面支援繁體中文與英文即時切換。
 
+**重點功能（v1.1）：單一程式的吞吐量監控與記錄** — 可挑選最多 5 個執行中的程式
+（例如 `chrome.exe`），**即時監控並逐分鐘記錄**其下載／上傳吞吐量：主視窗顯示即時速率
+與今日／本次累計，資料寫入同一 SQLite（可用統計圖表查詢），浮動面板也會為每個程式
+疊加一個區塊。精確的程式中流量來自 Windows 核心 ETW 網路提供者（TCP + UDP、
+IPv4 + IPv6，含 QUIC/HTTP3），需以**系統管理員**執行。
+
 ![主視窗](screenshots/main.png)
 
 ## 功能
@@ -24,7 +30,7 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 | 開機啟動 | 一鍵寫入 `HKCU\...\Run` 登錄項 |
 | 中英文 | tray 選單或設定視窗即時切換，無需重啟 |
 | 低資源 | 見下方[效能](#效能) |
-| **程序監控**（v1.1） | 每秒統計**特定程式**（如 chrome.exe）的上下載：主視窗程序列表（狀態／即時速率／今日／本次累計）、最多同時 5 個。資料以 `P:程式名` 鍵寫入同一 SQLite 量表（每分鐘一筆），統計圖表介面下拉可直接選程式繪圖。**需以系統管理員執行**（ETW `Microsoft-Windows-Kernel-Network`，TCP+UDP/IPv4+IPv6 全量精確）；未授權時程式正常運行，只在介面提示 |
+| **程序監控**（v1.1） | **監控並記錄單一程式的吞吐量**：挑選最多 5 個執行中的程式（如 `chrome.exe`），看即時下載／上傳與今日／本次累計。資料以 `P:程式名` 鍵、**每分鐘一筆**寫入同一 SQLite 量表，統計圖表的來源下拉可直接選程式繪圖與匯出 CSV。**需以系統管理員執行**（ETW `Microsoft-Windows-Kernel-Network`，TCP+UDP／IPv4+IPv6 精確全量）；未提權時其餘功能正常，介面會提示 |
 | **碼表統計**（v1.1） | 主視窗「⏱ 開始統計／⏹ 停止統計」：累計一段時間的下載／上傳總量，結束時寫入 SQLite，統計視窗下方列出所有紀錄（開始／結束／時間／下載／上傳），保留期間同 `retentionDays` |
 
 ## 畫面截圖
@@ -49,7 +55,7 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 ### 安裝程式（建議）
 
 1. 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-   `NetworkMonitor-1.1.1-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
+   `NetworkMonitor-1.1.2-x64-setup.exe`（32 位元系統請下載 `-x86-setup.exe`）
 2. 執行安裝，安裝過程可勾選：
    - 開始功能表捷徑（固定建立）、桌面捷徑（選用）
    - **開機時自動啟動**（寫入與程式內開機啟動開關相同的登錄值）
@@ -60,7 +66,7 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
 ### 免安裝版（portable）
 
 到 [Releases](https://github.com/caronyang/network-monitor/releases) 頁下載
-`NetworkMonitor-1.1.1-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
+`NetworkMonitor-1.1.2-portable-x64.zip`，解壓縮後執行 `NetworkMonitor.exe`
 （需 .NET 10 Desktop Runtime）。
 
 或自行執行 `publish-portable.bat`（framework-dependent）／`publish-selfcontained.bat`
@@ -79,12 +85,12 @@ Windows 系統匣常駐的即時網路流量監控工具：單一執行檔、低
   未以管理員執行時顯示緊湊的 `⚠ 需要管理員權限` 提示，點擊後**彈出對話框**詢問是否提權重啟
 - **程式網格**（v1.1，監控 ≥1 個程式時出現）：每列顯示程式名（如 `chrome.exe`）、執行狀態、
   即時下載／上傳速率與相對進度條、今日與本次累計；**列首的短寬小色塊**（綠＝執行中、
-  灰＝未執行）就是移除觸發鈕（手形游標、hover 高亮），不再有列尾 ×；一次顯示 3 列，
-  超過可用**捲動**檢視
+  灰＝未執行）就是移除觸發鈕（手形游標、hover 高亮），不再有列尾 ×；**固定顯示 2 列、其餘可捲動**，5 個監控程式都能存取
 - **介面網格**：各列**列首同樣有小色塊**（僅顯示連線狀態，綠＝已連線、灰＝未連線，
-  不可點擊），接著是介面名稱、連線速率、即時下載／上傳速率與相對進度條、今日與本次統計
+  不可點擊），接著是介面名稱、連線速率、即時下載／上傳速率與相對進度條、今日與本次統計；
+  清單放不下時可**捲動**
 - **碼表列**（v1.1，視窗最底部）：`⏱ 開始統計`／`⏹ 停止統計` 移到這裡；開始統計時同列
-  顯示運作狀態與即時累計（`⏱ 00:00:37 ↓ 4.7 MB ↑ 210 KB`）
+  顯示白話狀態與即時累計（`統計中 00:00:37 — 已下載 4.7 MB，已上傳 210 KB`）
 
 ### 系統匣（右下角）
 
@@ -197,7 +203,8 @@ dotnet run --project src\NetworkMonitor -c Release
 | `ApiDump\` | Windows API 結構欄位 dump（開發期用） |
 | `ApiIntrospect\` | ScottPlot API 反射探索 |
 | `shot.ps1` `shoth.ps1` `shotpw.ps1` `opengraphics.ps1` | UI 截圖（`shotpw` 走 PrintWindow，不受視窗遮擋影響） |
-| `enumwin.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | 視窗列舉／按鈕點擊／元素 dump／核取方塊操作／下拉選項操作／座標查元素（測試用） |
+| `enumwin.ps1` `winfinder.ps1` `uiclick.ps1` `uidump.ps1` `uicheck.ps1` `uicombo.ps1` `clickkeys.ps1` `sendkeys2.ps1` `uielement.ps1` `uiclose.ps1` | 視窗列舉（`winfinder` 依 PID 列出 handle／大小／標題）／按鈕點擊／元素 dump／核取方塊與下拉選項操作（測試用） |
+| `capture_hwnd.ps1` | 依視窗 handle 截圖（可跨完整性層級） |
 | `clickbtn.ps1` | 依索引點擊視窗內按鈕（跨語言，免傳中文字參數） |
 | `asciiart.ps1` `rawprof.ps1` `textink.ps1` `pixcheck.ps1` `measuretext.ps1` | 像素驗證：區域轉 ASCII／逐行墨跡剖析／按鈕文字位置／網格間距／TextRenderer 文字量測 |
 | `dumpstat.py` | 解析 `uidump.ps1` 輸出 |
